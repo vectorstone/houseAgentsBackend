@@ -1,0 +1,36 @@
+2023-12-22 20:47:46 |INFO  |lettuce-nioEventLoop-4-1 |AbstractInternalLogger.java:217 |io.lettuce.core.protocol.CommandHandler |null Unexpected exception during request: java.io.IOException: An existing connection was forcibly closed by the remote host
+java.io.IOException: An existing connection was forcibly closed by the remote host
+	at sun.nio.ch.SocketDispatcher.read0(Native Method)
+	at sun.nio.ch.SocketDispatcher.read(SocketDispatcher.java:43)
+	at sun.nio.ch.IOUtil.readIntoNativeBuffer(IOUtil.java:223)
+	at sun.nio.ch.IOUtil.read(IOUtil.java:192)
+	at sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:378)
+	at io.netty.buffer.PooledByteBuf.setBytes(PooledByteBuf.java:253)
+	at io.netty.buffer.AbstractByteBuf.writeBytes(AbstractByteBuf.java:1134)
+	at io.netty.channel.socket.nio.NioSocketChannel.doReadBytes(NioSocketChannel.java:350)
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:151)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:719)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:655)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:581)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:493)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:989)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.lang.Thread.run(Thread.java:750)
+2023-12-22 20:47:47 |INFO  |lettuce-eventExecutorLoop-1-5 |AbstractInternalLogger.java:171 |io.lettuce.core.protocol.ConnectionWatchdog |Reconnecting, last destination was /124.222.220.45:6379
+2023-12-22 20:47:56 |INFO  |lettuce-eventExecutorLoop-1-4 |AbstractInternalLogger.java:171 |io.lettuce.core.protocol.ConnectionWatchdog |Reconnecting, last destination was 124.222.220.45:6379
+2023-12-22 20:48:00 |INFO  |lettuce-nioEventLoop-4-2 |ReconnectionHandler.java:194 |io.lettuce.core.protocol.ReconnectionHandler |Reconnected to 124.222.220.45:6379
+2023-12-22 22:41:01 |INFO  |http-nio-8888-exec-10 |TokenAuthenticationFilter.java:43 |com.house.agents.security.TokenAuthenticationFilter |uri:/admin/user/info
+2023-12-22 22:41:03 |INFO  |http-nio-8888-exec-6 |TokenAuthenticationFilter.java:43 |com.house.agents.security.TokenAuthenticationFilter |uri:/admin/user/login
+2023-12-22 22:41:04 |INFO  |http-nio-8888-exec-4 |TokenAuthenticationFilter.java:43 |com.house.agents.security.TokenAuthenticationFilter |uri:/admin/user/info
+2023-12-22 22:41:05 |INFO  |http-nio-8888-exec-9 |TokenAuthenticationFilter.java:43 |com.house.agents.security.TokenAuthenticationFilter |uri:/admin/dict/1
+2023-12-22 22:41:05 |INFO  |http-nio-8888-exec-8 |TokenAuthenticationFilter.java:43 |com.house.agents.security.TokenAuthenticationFilter |uri:/admin/house/subway
+2023-12-22 22:41:05 |INFO  |http-nio-8888-exec-7 |TokenAuthenticationFilter.java:43 |com.house.agents.security.TokenAuthenticationFilter |uri:/admin/dict/170000
+2023-12-22 22:41:05 |INFO  |http-nio-8888-exec-1 |TokenAuthenticationFilter.java:43 |com.house.agents.security.TokenAuthenticationFilter |uri:/admin/house/1/30
+2023-12-22 22:41:23 |INFO  |http-nio-8888-exec-5 |TokenAuthenticationFilter.java:43 |com.house.agents.security.TokenAuthenticationFilter |uri:/admin/house/1/30
+2023-12-22 22:43:17 |INFO  |http-nio-8888-exec-2 |TokenAuthenticationFilter.java:43 |com.house.agents.security.TokenAuthenticationFilter |uri:/admin/house/1/30
+2023-12-22 22:43:54 |INFO  |http-nio-8888-exec-3 |TokenAuthenticationFilter.java:43 |com.house.agents.security.TokenAuthenticationFilter |uri:/admin/house/1/30
+2023-12-22 22:44:04 |INFO  |http-nio-8888-exec-10 |TokenAuthenticationFilter.java:43 |com.house.agents.security.TokenAuthenticationFilter |uri:/admin/house/1/30
+2023-12-22 22:44:05 |INFO  |http-nio-8888-exec-6 |TokenAuthenticationFilter.java:43 |com.house.agents.security.TokenAuthenticationFilter |uri:/admin/house/1/30
+2023-12-22 22:44:13 |INFO  |http-nio-8888-exec-4 |TokenAuthenticationFilter.java:43 |com.house.agents.security.TokenAuthenticationFilter |uri:/admin/house/1/30
+2023-12-22 22:44:45 |INFO  |http-nio-8888-exec-8 |TokenAuthenticationFilter.java:43 |com.house.agents.security.TokenAuthenticationFilter |uri:/admin/house/1/30

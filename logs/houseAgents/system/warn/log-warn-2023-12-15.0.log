@@ -1,0 +1,22 @@
+2023-12-15 11:31:59 |WARN  |lettuce-nioEventLoop-4-2 |AbstractInternalLogger.java:105 |io.lettuce.core.protocol.ConnectionWatchdog |Cannot reconnect to [124.222.220.45:6379]: No route to host: no further information: /124.222.220.45:6379
+io.netty.channel.AbstractChannel$AnnotatedNoRouteToHostException: No route to host: no further information: /124.222.220.45:6379
+Caused by: java.net.NoRouteToHostException: No route to host: no further information
+	at sun.nio.ch.SocketChannelImpl.checkConnect(Native Method)
+	at sun.nio.ch.SocketChannelImpl.finishConnect(SocketChannelImpl.java:715)
+	at io.netty.channel.socket.nio.NioSocketChannel.doFinishConnect(NioSocketChannel.java:330)
+	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.finishConnect(AbstractNioChannel.java:334)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:707)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:655)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:581)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:493)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:989)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.lang.Thread.run(Thread.java:750)
+2023-12-15 11:32:02 |WARN  |HikariPool-1 housekeeper |HikariPool.java:787 |com.zaxxer.hikari.pool.HikariPool |HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=11h25m39s253ms1µs700ns).
+2023-12-15 14:18:25 |WARN  |http-nio-8888-exec-9 |BCryptPasswordEncoder.java:126 |org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder |Encoded password does not look like BCrypt
+2023-12-15 14:18:45 |WARN  |http-nio-8888-exec-7 |BCryptPasswordEncoder.java:126 |org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder |Encoded password does not look like BCrypt
+2023-12-15 14:19:52 |WARN  |http-nio-8888-exec-3 |BCryptPasswordEncoder.java:126 |org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder |Encoded password does not look like BCrypt
+2023-12-15 14:19:55 |WARN  |http-nio-8888-exec-4 |BCryptPasswordEncoder.java:126 |org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder |Encoded password does not look like BCrypt
+2023-12-15 14:19:56 |WARN  |http-nio-8888-exec-1 |BCryptPasswordEncoder.java:126 |org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder |Encoded password does not look like BCrypt
+2023-12-15 14:19:57 |WARN  |http-nio-8888-exec-2 |BCryptPasswordEncoder.java:126 |org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder |Encoded password does not look like BCrypt

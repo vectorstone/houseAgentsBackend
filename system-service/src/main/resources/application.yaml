@@ -1,0 +1,56 @@
+server:
+  # 必须使用8160,后面的微信登录 wx授权回调域配置的是localhost:8160 使用别的端口将来不能测试
+  port: 8888
+spring:
+  servlet:
+    multipart:
+      # 一次请求的所有文件表单项文件总大小
+      max-request-size: 50MB
+      # 单个文件表单项文件大小限制 40MB
+      max-file-size: 40MB
+  # 应用名称
+  application:
+    name: system-service
+  # 数据库的相关配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://124.222.220.45:32768/HousingAgents?serverTimezone=Asia/Shanghai&allowMultiQueries=true
+    username: ENC(+UqVvXNR//wSI0Qp1xAh/PLrJKYjgnhAoyL5BAvngMvInTuxcijGEkaqtjjfUN8d)
+    password: ENC(vqUawoWuP0ai73FSET+uU4hQN8gELwUediXJ41S86h2zc6G09JV8VqkwdE/89tn0Ntt3uu8kjao8dfuFf4qtHg==)
+#    type: com.zaxxer.hikari.HikariDataSource
+  # 配置文件的切换配置
+  profiles:
+    active: dev
+  # 设置时间日期格式和时区的设置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  redis:
+    host: 124.222.220.45
+#    host: ${REMOTE_HOST}
+    port: 6379
+    password: ENC(XC2ObTM80vSAsUNA5uTAjMp4OEg09wYpXsVXJS1xm62fZN3dcdocryBJpa6qbMTm)
+#    password: ${REMOTE_REDIS_PASSWORD}
+mybatis-plus:
+  type-aliases-package: com.house.agents.entity
+  configuration:
+    # 启用sql语句的日志输入功能
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  # 自定义mapper.xml文件的放置的路径
+  mapper-locations: classpath*:/mapper/xml/*.xml
+  # 主键id雪花算法生成全局配置
+  global-config:
+    db-config:
+      id-type: assign_id
+
+jasypt:
+  encryptor:
+    password: ${JASYPT_PASS}
+
+aliyun:
+  oss:
+    schema: https://
+    endpoint: oss-cn-beijing.aliyuncs.com
+    bucketName: house-agents
+    #accessKeyId: 不安全,不使用这种方式
+    #accessKeySecret: 不安全,不使用这种方式

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.house.agents.mapper.SysRoleMapper">
+    <sql id="columns">
+        id,role_name,role_code,description,create_time,update_time,is_deleted
+    </sql>
+    <sql id="is_deleted">
+        and is_deleted = 0
+            order by id asc
+    </sql>
+    <select id="selectPage" resultType="SysRole">
+        select
+        <include refid="columns"></include>
+        from sys_role
+        <where>
+            <if test="vo.roleName != null and vo.roleName != ''">
+                and role_name like concat ('%',#{vo.roleName},'%')
+            </if>
+            <include refid="is_deleted"></include>
+        </where>
+    </select>
+    
+    <select id="getUserRoleListByUserId" resultType="com.house.agents.entity.SysRole">
+        select t2.id,t2.role_name,t2.role_code,t2.description,t2.create_time,t2.update_time,t2.is_deleted AS deleted from sys_user_role t1 join sys_role t2 on t1.role_id = t2.id where t1.user_id = #{userId} and t1.is_deleted = 0;
+    </select>
+</mapper>
