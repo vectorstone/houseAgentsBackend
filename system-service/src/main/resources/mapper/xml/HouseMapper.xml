@@ -2,18 +2,32 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.house.agents.mapper.HouseMapper">
 
-    <select id="getMonthlyCost" resultType="com.house.agents.entity.vo.MonthCostVo">
-        select date_format(create_time, '%Y-%m') cdate, sum(amount) cost
-        from book
-        where user = #{userId}
-        group by cdate
-        having cdate >= #{start}
-           and cdate &lt;= #{end}
-        order by cdate asc
+    <!-- 使用sql标签抽取重复出现的SQL片段 -->
+    <sql id="mySelectSql">
+        select id,user_id,community,subway,room_number,rent,orientation,keyOrPassword,remark,create_time,update_time,is_deleted AS deleted from house
+    </sql>
+
+    <select id="getDeletedHouse" resultType="com.house.agents.entity.House">
+        <include refid="mySelectSql"/>
+        where id = #{houseId}
     </select>
-    <select id="getAllData" resultType="com.house.agents.entity.Book">
-        select type,amount,category,subcategory,remark,label,date_format(create_time,'%Y-%m-%e') `create_time`
-        from book
-        order by create_time asc
+    <update id="rePublishDeletedHouse">
+        update house set is_deleted = 0 where id = #{houseId}
+    </update>
+
+    <update id="rePublishDeletedHouses">
+        <foreach collection="houseIds" item="houseId" separator=";">
+            update house set is_deleted = 0 where id = #{houseId}
+        </foreach>
+    </update>
+    
+    <select id="getTotalCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM house WHERE is_deleted = 1 AND (user_id = #{userId})
     </select>
+    
+    <select id="getDeletedHousesWithPage" resultType="com.house.agents.entity.House">
+        <include refid="mySelectSql"/>
+        where is_deleted= 1 and user_id = #{userId} ORDER BY create_time DESC LIMIT #{limitNum},#{pageSize}
+    </select>
+    
 </mapper>

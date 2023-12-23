@@ -82,5 +82,5 @@ public class House implements Serializable {
 
     @ApiModelProperty(value = "房子所属的附件url集合")
     @TableField(exist = false)
-    private List<String> houseAttachment;
+    private List<HouseAttachment> houseAttachment;
 }

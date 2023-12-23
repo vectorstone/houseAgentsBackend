@@ -8,6 +8,10 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.initialization.qual.Initialized;
+import org.springframework.beans.factory.InitializingBean;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -42,8 +46,14 @@ public class HouseSearchVo {
     @ApiModelProperty(value = "楼栋及房间号")
     private String roomNumber;
 
-    @ApiModelProperty(value = "月租金")
-    private BigDecimal rent;
+    @ApiModelProperty(value = "月租金的范围")
+    private String rentRange;
+
+    @ApiModelProperty(value = "月租金起始")
+    private BigDecimal startRent;
+
+    @ApiModelProperty(value = "结束月租金结束")
+    private BigDecimal endRent;
 
     @ApiModelProperty(value = "朝向")
     private String orientation;
@@ -54,7 +64,6 @@ public class HouseSearchVo {
     @ApiModelProperty(value = "备注")
     private String remark;
     // ===
-
     @ApiModelProperty(value = "创建用户的id")
     private Long userId;
 }

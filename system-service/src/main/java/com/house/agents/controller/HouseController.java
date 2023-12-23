@@ -4,14 +4,14 @@ package com.house.agents.controller;
 import com.alibaba.excel.util.StringUtils;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.house.agents.entity.Book;
-import com.house.agents.entity.SysUser;
+import com.house.agents.entity.*;
 import com.house.agents.entity.vo.HouseSearchVo;
 import com.house.agents.entity.vo.SearchVo;
 import com.house.agents.result.R;
 import com.house.agents.result.ResponseEnum;
 import com.house.agents.service.BookService;
 import com.house.agents.service.HouseService;
+import com.house.agents.service.SubwayService;
 import com.house.agents.utils.BusinessException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -25,10 +25,11 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * <p>
- *  前端控制器
+ * 前端控制器
  * </p>
  *
  * @author Gavin
@@ -40,107 +41,162 @@ import java.util.Map;
 @CrossOrigin
 public class HouseController {
     @Autowired
-    HouseService houseService;
+    private HouseService houseService;
     @Autowired
-    RedisTemplate redisTemplate;
+    private RedisTemplate redisTemplate;
 
-//    @PreAuthorize("hasAnyAuthority('bnt.account.upload')")
-    @ApiOperation("账单excel表格的上传功能")
+    @Autowired
+    private SubwayService subwayService;
+
+    @PreAuthorize("hasAnyAuthority('bnt.house.excelUpload')")
+    @ApiOperation("待出租房excel表格的上传功能")
     @PostMapping("/import")
-    public R importBook(@RequestParam("file")MultipartFile file,@RequestHeader("token")String token){
-        //excel也是只能上传自己的账单数据,不能上传别人的数据
-        SysUser sysUser = (SysUser)redisTemplate.boundValueOps(token).get();
+    public R importHouse(@RequestParam("file") MultipartFile file, @RequestHeader("token") String token) {
+        // excel也是只能上传自己的账单数据,不能上传别人的数据
+        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
         Long userId = sysUser.getId();
-        houseService.importHouses(file,userId);
+        houseService.importHouses(file, userId);
+        return R.ok();
+    }
+
+    @PreAuthorize("hasAnyAuthority('bnt.house.list')")
+    @ApiOperation("分页查询")
+    @PostMapping("/{pageNum}/{pageSize}")
+    public R getList(/* @RequestParam(value = "searchVo",required = false) SearchVo searchVo */
+            @RequestBody HouseSearchVo houseSearchVo,
+            @PathVariable("pageNum") Integer pageNum,
+            @PathVariable("pageSize") Integer pageSize,
+            @RequestHeader("token") String token) {
+        // 所有的账单的查询必须只能查询自己的,实现多用户的账单数据的隔离
+        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        Long userId = sysUser.getId();
+        Page page = houseService.getPageList(pageNum, pageSize, houseSearchVo, sysUser);
+        return R.ok().data("items", page);
+    }
+
+    @PreAuthorize("hasAnyAuthority('bnt.house.list')")
+    @ApiOperation("分页查询已经下架了的房子信息")
+    @PostMapping("/deleted/{pageNum}/{pageSize}")
+    public R getDeletedList(/* @RequestParam(value = "searchVo",required = false) SearchVo searchVo */
+            @RequestBody HouseSearchVo houseSearchVo,
+            @PathVariable("pageNum") Integer pageNum,
+            @PathVariable("pageSize") Integer pageSize,
+            @RequestHeader("token") String token) {
+        // 所有的账单的查询必须只能查询自己的,实现多用户的账单数据的隔离
+        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        Long userId = sysUser.getId();
+        Page page = houseService.getDeletedPageList(pageNum, pageSize, houseSearchVo, userId);
+        return R.ok().data("items", page);
+    }
+
+    @PreAuthorize("hasAnyAuthority('bnt.house.excelDownload')")
+    @ApiOperation("房子信息导出为excel")
+    @GetMapping("/export")
+    // 这个地方不能有返回值,否则会覆盖服务器给前端的response响应
+    public void download(HttpServletResponse response, @RequestHeader(required = true, name = "token") String token) {
+        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        Long userId = sysUser.getId();
+
+        houseService.exportHouses(response, userId);
+    }
+
+    @PreAuthorize("hasAnyAuthority('bnt.house.remove')")
+    @ApiOperation("根据id删除房子")
+    @DeleteMapping("/{id}")
+    public R removeById(@PathVariable("id") String id, @RequestHeader("token") String token) {
+        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        Long userId = sysUser.getId();
+        // 加个判断,如果修改的不是自己的账单的数据抛出异常
+        House house = houseService.getById(id);
+        if (house.getUserId() != userId) {
+            throw new BusinessException(ResponseEnum.NOT_YOUSELF_ACCOUNT);
+        }
+        houseService.removeById(id);
+        return R.ok();
+    }
+
+    @PreAuthorize("hasAnyAuthority('bnt.house.update')")
+    @ApiOperation("重新上架房子")
+    @PutMapping("/{houseId}")
+    public R rePublishHouse(@PathVariable("houseId") String houseId, @RequestHeader("token") String token) {
+        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        Long userId = sysUser.getId();
+        // 加个判断,如果修改的不是自己的账单的数据抛出异常
+        House house = houseService.getByIdDeleted(Long.valueOf(houseId));
+        if (house != null && house.getUserId() != userId) {
+            throw new BusinessException(ResponseEnum.NOT_YOUSELF_ACCOUNT);
+        }
+        houseService.rePublishById(Long.valueOf(houseId));
+        return R.ok();
+    }
+
+    @PreAuthorize("hasAnyAuthority('bnt.house.update')")
+    @ApiOperation("根据id修改房子信息")
+    @PutMapping
+    public R updateById(@RequestBody House house, @RequestHeader("token") String token) {
+        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        Long userId = sysUser.getId();
+        // 加个判断,如果修改的不是自己的账单的数据抛出异常
+        if (house.getUserId() != userId) {
+            throw new BusinessException(ResponseEnum.NOT_YOUSELF_ACCOUNT);
+        }
+        houseService.updateById(house);
+        return R.ok();
+    }
+
+    @PreAuthorize("hasAnyAuthority('bnt.house.add')")
+    @ApiOperation("新增房子信息")
+    @PostMapping
+    public R save(@RequestBody House house, @RequestHeader("token") String token) {
+        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        Long userId = sysUser.getId();
+        house.setUserId(userId);
+        houseService.save(house);
+        return R.ok();
+    }
+    @PreAuthorize("hasAnyAuthority('bnt.house.remove')")
+    @ApiOperation("批量删除")
+    @DeleteMapping()
+    public R batchRemoveByIds(@RequestBody List<String> houseIds, @RequestHeader("token") String token) {
+        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        Long userId = sysUser.getId();
+        // 加个判断,如果修改的不是自己房子的数据抛出异常
+        boolean checkUser = houseIds.stream().map(houseId -> {
+            House house = houseService.getById(houseId);
+            return house.getUserId();
+        }).allMatch(t -> t.equals(userId));
+        if (!checkUser) {
+            throw new BusinessException(ResponseEnum.NOT_YOUSELF_ACCOUNT);
+        }
+        houseService.removeByIds(houseIds);
+        return R.ok();
+    }
+
+    @PreAuthorize("hasAnyAuthority('bnt.house.update')")
+    @ApiOperation("批量重新上架")
+    @PutMapping("/batch/republish")
+    public R batchRepublishByIds(@RequestBody List<String> houseIds, @RequestHeader("token") String token){
+        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        Long userId = sysUser.getId();
+        // 加个判断,如果修改的不是自己房子的数据抛出异常
+        boolean checkUser = houseIds.stream().map(houseId -> {
+            House house = houseService.getByIdDeleted(Long.valueOf(houseId));
+            return house.getUserId();
+        }).allMatch(t -> t.equals(userId));
+        if (!checkUser) {
+            throw new BusinessException(ResponseEnum.NOT_YOUSELF_ACCOUNT);
+        }
+        houseService.rePublishByIds(houseIds);
         return R.ok();
     }
 
 
-    @PreAuthorize("hasAnyAuthority('bnt.account.list')")
-    @ApiOperation("分页查询")
-    @PostMapping ("/{pageNum}/{pageSize}")
-    public R getList(/* @RequestParam(value = "searchVo",required = false) SearchVo searchVo */
-            @RequestBody HouseSearchVo houseSearchVo,
-                     @PathVariable("pageNum")Integer pageNum,
-                     @PathVariable("pageSize")Integer pageSize,
-            @RequestHeader("token")String token){
-        //所有的账单的查询必须只能查询自己的,实现多用户的账单数据的隔离
-        SysUser sysUser = (SysUser)redisTemplate.boundValueOps(token).get();
-        Long userId = sysUser.getId();
-        Page page = houseService.getPageList(pageNum,pageSize,houseSearchVo,userId);
-        return R.ok().data("items",page);
+    @PreAuthorize("hasAnyAuthority('bnt.house.list')")
+    @ApiOperation(value = "获取地铁线路信息")
+    @GetMapping("/subway")
+    public R getSubway(){
+        List<Subway> list = subwayService.list();
+        return R.ok().data("items",list);
     }
-//
-//    @PreAuthorize("hasAnyAuthority('bnt.account.download')")
-//    @ApiOperation("账单导出为excel")
-//    @GetMapping("/export")
-//    //这个地方不能有返回值,否则会覆盖服务器给前端的response响应
-//    public void download(HttpServletResponse response,@RequestHeader("token")String token){
-//        SysUser sysUser = (SysUser)redisTemplate.boundValueOps(token).get();
-//        Long userId = sysUser.getId();
-//        bookService.exportAccount(response,userId);
-//    }
-//    @PreAuthorize("hasAnyAuthority('bnt.account.remove')")
-//    @ApiOperation("根据id删除账单")
-//    @DeleteMapping("/{id}")
-//    public R removeById(@PathVariable("id")String id,@RequestHeader("token")String token){
-//        SysUser sysUser = (SysUser)redisTemplate.boundValueOps(token).get();
-//        Long userId = sysUser.getId();
-//        //加个判断,如果修改的不是自己的账单的数据抛出异常
-//        Book book = bookService.getById(id);
-//        if (book.getUser().longValue() != userId.longValue()){
-//            throw new BusinessException(ResponseEnum.NOT_YOUSELF_ACCOUNT);
-//        }
-//        bookService.removeById(id);
-//        return R.ok();
-//    }
-//    @PreAuthorize("hasAnyAuthority('bnt.account.update')")
-//    @ApiOperation("根据id修改账单")
-//    @PutMapping
-//    public R updateById(@RequestBody Book book,@RequestHeader("token")String token){
-//        SysUser sysUser = (SysUser)redisTemplate.boundValueOps(token).get();
-//        Long userId = sysUser.getId();
-//        //加个判断,如果修改的不是自己的账单的数据抛出异常
-//        if (book.getUser().longValue() != userId.longValue()){
-//            throw new BusinessException(ResponseEnum.NOT_YOUSELF_ACCOUNT);
-//        }
-//        bookService.updateById(book);
-//        return R.ok();
-//    }
-//    @PreAuthorize("hasAnyAuthority('bnt.account.add')")
-//    @ApiOperation("新增账单")
-//    @PostMapping
-//    public R save(@RequestBody Book book,@RequestHeader("token")String token){
-//        SysUser sysUser = (SysUser)redisTemplate.boundValueOps(token).get();
-//        Long userId = sysUser.getId();
-//        book.setUser(userId);
-//        bookService.save(book);
-//        return R.ok();
-//    }
-//    @PreAuthorize("hasAnyAuthority('bnt.echarts.list')")
-//    @ApiOperation("每月支出情况统计echarts")
-//    @GetMapping("/echarts/cost/monthly/{start}/{end}")
-//    public R costMonthly(@PathVariable("start")String start,
-//                         @PathVariable("end")String end,@RequestHeader("token")String token){
-//        SysUser sysUser = (SysUser)redisTemplate.boundValueOps(token).get();
-//        Long userId = sysUser.getId();
-//        Map<String,List<String>> map = bookService.getMonthlyCost(start,end,userId);
-//        return R.ok().data("items",map);
-//    }
-//    @PreAuthorize("hasAnyAuthority('bnt.echarts.list')")
-//    @ApiOperation("每天支出情况统计echarts")
-//    //不需要参数,汇总统计的是所有的数据
-//    @GetMapping("/echarts/cost/largeArea")
-//    public R largeArea(@RequestHeader("token")String token){
-//        SysUser sysUser = (SysUser)redisTemplate.boundValueOps(token).get();
-//        Long userId = sysUser.getId();
-//        String largeAreaData = redisTemplate.boundValueOps("largeAreaData").get().toString();
-//        if (StringUtils.isNotBlank(largeAreaData)){
-//            Map map = JSON.parseObject(largeAreaData, Map.class);
-//            return R.ok().data("items",map);
-//        }
-//        Map<String,List<String>> map = bookService.getLargeAreaData(userId);
-//        return R.ok().data("items",map);
-//    }
 }
 
