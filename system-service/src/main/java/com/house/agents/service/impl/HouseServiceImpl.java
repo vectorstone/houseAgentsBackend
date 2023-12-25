@@ -17,10 +17,12 @@ import com.house.agents.mapper.HouseMapper;
 import com.house.agents.result.ResponseEnum;
 import com.house.agents.service.HouseAttachmentService;
 import com.house.agents.service.HouseService;
+import com.house.agents.service.SysUserService;
 import com.house.agents.utils.Asserts;
 import com.house.agents.utils.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.ibatis.annotations.Param;
@@ -33,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -50,6 +53,9 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
     private HouseAttachmentService houseAttachmentService;
     @Autowired
     private HouseMapper houseMapper;
+
+    @Autowired
+    private SysUserService sysUserService;
 
     @Override
     public void importHouses(MultipartFile file, Long userId) {
@@ -92,21 +98,13 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
 
     @Override
     public Page getPageList(Integer pageNum, Integer pageSize, HouseSearchVo houseSearchVo, SysUser sysUser) {
-        List<SysRole> roleList = sysUser.getRoleList();
-        if (CollectionUtils.isEmpty(roleList)){
-            // 如果roleList为空的话,那么说明是有问题的,需要抛出一场
-            log.info(String.format("interfaceName = %s , methodName = %s , parameter = userId : %s","HouseServiceImpl","getPageList",sysUser.getId()));
-            throw new BusinessException("roleList为空");
-        }
-        // 只要当前该用户拥有的角色列表里面有任何一个角色的roleCode和SYSTEM相等,说明该用户具有管理员的权限,那么就默认查询所有的数据
-        boolean isAdmin = roleList.stream().map(SysRole::getRoleCode).anyMatch(roleCode -> roleCode.equals("SYSTEM"));
-
-        Page<House> housePage = new Page<>(pageNum, pageSize);
+                Page<House> housePage = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<House> wrapper = null;
-        if (isAdmin){
+        Long userId = sysUser.getId();
+        if (isAdmin(sysUser)){
             wrapper = Wrappers.lambdaQuery(House.class);
         }else {
-            wrapper = Wrappers.lambdaQuery(House.class).eq(House::getUserId, sysUser.getId());
+            wrapper = Wrappers.lambdaQuery(House.class).eq(House::getUserId, userId);
         }
         // 构建查询的条件
         if (houseSearchVo != null) {
@@ -117,6 +115,16 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
             String orientation = houseSearchVo.getOrientation();
             String keyOrPassword = houseSearchVo.getKeyOrPassword();
             String remark = houseSearchVo.getRemark();
+            String landlordName = houseSearchVo.getLandlordName();
+
+            if (StringUtils.isNotEmpty(landlordName)){
+                List<SysUser> landlords = sysUserService.list(Wrappers.lambdaQuery(SysUser.class).like(SysUser::getName, landlordName));
+                if (CollectionUtils.isNotEmpty(landlords)){
+                    // 根据房东的姓名查询出来对应的userId
+                    List<Long> userIds = landlords.stream().map(SysUser::getId).collect(Collectors.toList());
+                    wrapper.in(House::getUserId,userIds);
+                }
+            }
 
             // 模糊
             if (StringUtils.isNotEmpty(community)) {
@@ -165,20 +173,69 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         // wrapper.orderByDesc(House::getCreateTime);
         wrapper.orderByDesc(House::getUpdateTime); // 将最新修改的房子置顶在前面
         Page<House> housePageData = this.page(housePage, wrapper);
+        // 设置house的附件和房东的姓名的方法
+        setExtraAttributes(housePageData);
+        return housePageData;
+    }
+
+    private boolean isAdmin(SysUser sysUser) {
+        List<SysRole> roleList = sysUser.getRoleList();
+        if (CollectionUtils.isEmpty(roleList)){
+            // 如果roleList为空的话,那么说明是有问题的,需要抛出一场
+            log.info(String.format("interfaceName = %s , methodName = %s , parameter = userId : %s","HouseServiceImpl","getPageList", sysUser.getId()));
+            throw new BusinessException("roleList为空");
+        }
+        // 只要当前该用户拥有的角色列表里面有任何一个角色的roleCode和SYSTEM相等,说明该用户具有管理员的权限,那么就默认查询所有的数据
+        return roleList.stream().map(SysRole::getRoleCode).anyMatch(roleCode -> roleCode.equals("SYSTEM"));
+    }
+
+    /**
+     * 该方法用来设置house额外的附件的信息以及房东姓名的属性
+     * @param housePageData 分页的page对象
+     */
+    private void setExtraAttributes(Page<House> housePageData) {
         if (housePageData != null && CollectionUtils.isNotEmpty(housePageData.getRecords())) {
             // 如果查询出来的结果不为空的话,那么就设置对应的房子的附件进去
             List<House> houses = housePageData.getRecords();
             houses.forEach(house -> {
+                // 查询房子所属的附件并设置进去
                 List<HouseAttachment> houseAttachments = houseAttachmentService.list(
                         Wrappers.lambdaQuery(HouseAttachment.class).eq(HouseAttachment::getHouseId, house.getId()));
                 house.setHouseAttachment(houseAttachments);
+                // 查询房子所属的房东并设置进去
+                SysUser landlord = sysUserService.getById(house.getUserId());
+                house.setLandlordName(landlord.getName());
             });
         }
-        return housePageData;
     }
 
+    /**
+     * 重要: userId和userIds这两个条件不可以同时存在,不然的话sql语句会报错
+     * @param pageNum
+     * @param pageSize
+     * @param houserSearchVo
+     * @param sysUser
+     * @return
+     */
     @Override
-    public Page getDeletedPageList(Integer pageNum, Integer pageSize, HouseSearchVo houserSearchVo, Long userId) {
+    public Page getDeletedPageList(Integer pageNum, Integer pageSize, HouseSearchVo houserSearchVo, SysUser sysUser) {
+        Long userId = sysUser.getId();
+        // 判断是否为管理员,如果是管理员的话,那么就将userId设置为0,这样sql里面查询的时候就会查询所有的数据
+        List<Long> userIds = Lists.newArrayList();
+        if (isAdmin(sysUser)){
+            userId = 0L;
+            // 只有是管理员的情况下,才能根据房东的姓名进行筛选对应的房源信息,普通的用户只能查看到自己的房源数据,无法筛选其他人的数据
+            String landlordName = houserSearchVo.getLandlordName();
+            if (StringUtils.isNotEmpty(landlordName)){
+                List<SysUser> landlords = sysUserService.list(Wrappers.lambdaQuery(SysUser.class).like(SysUser::getName, landlordName));
+                userIds = Optional.ofNullable(landlords).orElse(Lists.newArrayList()).stream().map(SysUser::getId).collect(Collectors.toList());
+                // if (CollectionUtils.isNotEmpty(landlords)){
+                //     // 根据房东的姓名查询出来对应的userId
+                //     userIds = landlords.stream().map(SysUser::getId).collect(Collectors.toList());
+                // }
+            }
+        }
+
         Page<House> housePage = new Page<>(pageNum, pageSize);
         // LambdaQueryWrapper<House> wrapper = Wrappers.lambdaQuery(House.class).eq(House::getUserId, userId).eq(House::getDeleted,1);
         // Page<House> housePageData = this.page(housePage, wrapper);
@@ -194,7 +251,10 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         // 查询对应的数据 (pageNum - 1) * pageSize   limit (pageNum - 1) * pageSize , pageSize
         // SELECT id,user_id,community,subway,room_number,rent,orientation,keyOrPassword,remark,create_time,update_time,is_deleted AS deleted FROM house WHERE is_deleted=0 AND (user_id = ?) ORDER BY create_time DESC LIMIT ?,?
         int limitNum = (pageNum - 1) * pageSize;
-        List<House> deletedHousesWithPage = baseMapper.getDeletedHousesWithPage(userId, limitNum, pageSize);
+
+
+
+        List<House> deletedHousesWithPage = baseMapper.getDeletedHousesWithPage(userId, limitNum, pageSize,userIds);
         // 设置到page对象里面然后返回数据
         housePage.setTotal(totalCount);
         housePage.setSize(pageSize);
@@ -204,6 +264,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         housePage.setSearchCount(true);
         housePage.setPages(pages);
         housePage.setRecords(deletedHousesWithPage);
+        setExtraAttributes(housePage);
         return housePage;
     }
 

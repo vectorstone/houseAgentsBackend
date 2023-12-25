@@ -1,10 +1,6 @@
 package com.house.agents;
 
-import com.alibaba.excel.EasyExcel;
-import com.alibaba.excel.support.ExcelTypeEnum;
-import com.house.agents.entity.vo.BookVo;
-import com.house.agents.listener.EmployeeExcelListener;
-import com.house.agents.service.BookService;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
 import org.joda.time.DateTime;
@@ -23,16 +19,16 @@ import java.util.Date;
 @SpringBootTest
 @Slf4j
 public class TestData {
-    @Resource
-    BookService bookService;
+    // @Resource
+    // BookService bookService;
     //简单读取数据测试
-    @Test
-    void readFileTest(){
-        //D:/Desktop/oldData230803.xlsx
-        File file = new File("D:/Desktop/oldData230803.xlsx");
-        EasyExcel.read(file, BookVo.class, new EmployeeExcelListener(bookService)).excelType(ExcelTypeEnum.XLSX)
-                .sheet().doRead();
-    }
+    // @Test
+    // void readFileTest(){
+    //     //D:/Desktop/oldData230803.xlsx
+    //     File file = new File("D:/Desktop/oldData230803.xlsx");
+    //     EasyExcel.read(file, BookVo.class, new EmployeeExcelListener(bookService)).excelType(ExcelTypeEnum.XLSX)
+    //             .sheet().doRead();
+    // }
     @Test
     void test1(){
         DateTime dateTime = new DateTime(new Date());

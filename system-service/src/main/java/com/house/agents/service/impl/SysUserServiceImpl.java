@@ -10,8 +10,10 @@ import com.house.agents.mapper.SysMenuMapper;
 import com.house.agents.mapper.SysRoleMapper;
 import com.house.agents.mapper.SysUserMapper;
 import com.house.agents.mapper.SysUserRoleMapper;
+import com.house.agents.result.ResponseEnum;
 import com.house.agents.service.SysUserService;
 
+import com.house.agents.utils.Asserts;
 import com.house.agents.utils.MenuHelper;
 import com.house.agents.utils.RouterHelper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -52,6 +54,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Autowired
     private SysRoleMapper sysRoleMapper;
+
+    private static final Pattern CHINESE_AND_SPECIAL_CHAR_PATTERN = Pattern.compile("[\u4E00-\u9FA5|\\！|\\，|\\。|\\（|\\）|\\《|\\》|\\“|\\”|\\？|\\：|\\；|\\【|\\】]");
 
     @Override
     public Page<SysUser> getPageList(Integer page, Integer limit, UserVo userQueryVo) {
@@ -124,7 +128,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         //2.2将用户的头像信息放进去
         userInfoMap.put("avatar",sysUser.getHeadUrl());
         //2.3将用户的角色信息放进去(因为还没有涉及到权限的事情,所以这里先放一个假的数据进去)
-        userInfoMap.put("roles","[admin]");
+        List<SysRole> sysRoles = sysRoleMapper.getUserRoleListByUserId(sysUser.getId());
+        // userInfoMap.put("roles","[admin]");
+        userInfoMap.put("roles",sysRoles);
 
         //3.查询用户的菜单信息(需要判断是不是管理员,如果是管理员的话直接查询所有,如果不是管理员的话需要进行多表查询)
         List<SysMenu> menuByUserId = getMenuByUserId(userId);
@@ -201,6 +207,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     PasswordEncoder passwordEncoder;
     @Override
     public void addUser(SysUser sysUser) {
+        // 校验用户不能为空
+        Asserts.AssertNotNull(sysUser, ResponseEnum.NOT_NULL_ERROR);
         //防止传过来的对象里面带的有更新的时间
         sysUser.setUpdateTime(null);
         sysUser.setCreateTime(null);
@@ -213,13 +221,20 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         sysUser.setPassword(encryptPassword);
         sysUser.setSalt(salt);
 
+
         //有的人不删除提示的那个内容,所以增加一个判断头像的链接中是否包含中文
-        Pattern p = Pattern.compile("[\u4E00-\u9FA5|\\！|\\，|\\。|\\（|\\）|\\《|\\》|\\“|\\”|\\？|\\：|\\；|\\【|\\】]");
-        Matcher m = p.matcher(sysUser.getHeadUrl());
-        if (StringUtils.isBlank(sysUser.getHeadUrl()) || m.find()){
+        // Pattern p = Pattern.compile("[\u4E00-\u9FA5|\\！|\\，|\\。|\\（|\\）|\\《|\\》|\\“|\\”|\\？|\\：|\\；|\\【|\\】]");
+        // Matcher m = p.matcher(sysUser.getHeadUrl());
+        // if (StringUtils.isBlank(sysUser.getHeadUrl()) || m.find()){
+        //     //如果用户没有设置头像的链接的话,那么就给设置一个默认值
+        //     sysUser.setHeadUrl("https://obsidiantuchuanggavin.oss-cn-beijing.aliyuncs.com/img/20180629210546_CQARA.jpeg");
+        // }
+
+        if (StringUtils.isBlank(sysUser.getHeadUrl()) || CHINESE_AND_SPECIAL_CHAR_PATTERN.matcher(sysUser.getHeadUrl()).find()){
             //如果用户没有设置头像的链接的话,那么就给设置一个默认值
             sysUser.setHeadUrl("https://obsidiantuchuanggavin.oss-cn-beijing.aliyuncs.com/img/20180629210546_CQARA.jpeg");
         }
+
         sysUser.setStatus(1);
         this.save(sysUser);
         //生成的用户的默认的角色为普通的用户  普通用户的角色id为1701904865820712961
@@ -227,7 +242,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         sysUserRole.setUserId(sysUser.getId());
         sysUserRole.setRoleId(1701904865820712961L);
         sysUserRoleMapper.insert(sysUserRole);
-
     }
 
     @Override

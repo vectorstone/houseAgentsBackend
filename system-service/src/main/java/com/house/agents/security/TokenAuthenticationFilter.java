@@ -1,6 +1,7 @@
 package com.house.agents.security;
 
 import com.house.agents.entity.SysUser;
+import com.house.agents.utils.CookieUtils;
 import com.house.agents.utils.Result;
 import com.house.agents.utils.ResultCodeEnum;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -64,6 +65,11 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
         // 从请求头中获取token
         String token = request.getHeader("token");
+
+        // 由于文件上传的请求没有经过前端的拦截器,所以请求头里面没有对应的token,所以这个时候尝试从cookie里面获取对应的token
+        // if (StringUtils.isEmpty(token)){
+        //     token = CookieUtils.getCookieValue(request, "vue_admin_template_token");
+        // }
 
         if (!StringUtils.isEmpty(token)) {
             //从redis中读取对应的sysUser信息

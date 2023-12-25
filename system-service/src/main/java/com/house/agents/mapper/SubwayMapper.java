@@ -1,11 +1,7 @@
 package com.house.agents.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.house.agents.entity.Dict;
 import com.house.agents.entity.Subway;
-import org.apache.ibatis.annotations.Param;
-
-import java.util.List;
 
 /**
  * <p>

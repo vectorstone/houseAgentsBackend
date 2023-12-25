@@ -2,12 +2,13 @@ package com.house.agents.controller;
 
 
 import com.alibaba.fastjson.JSON;
+import com.house.agents.annotation.LogAnnotation;
 import com.house.agents.entity.SysUser;
 import com.house.agents.entity.vo.LoginVo;
 import com.house.agents.entity.vo.UserVo;
 import com.house.agents.result.R;
 import com.house.agents.result.ResponseEnum;
-import com.house.agents.service.BookService;
+import com.house.agents.service.SysRoleService;
 import com.house.agents.service.SysUserService;
 import com.house.agents.utils.BusinessException;
 import com.house.agents.utils.MD5;
@@ -49,7 +50,7 @@ public class SysUserController {
     @Autowired
     RedisTemplate redisTemplate;
     @Autowired
-    BookService bookService;
+    private SysRoleService sysRoleService;
 
 
     @PreAuthorize("hasAnyAuthority('bnt.sysUser.list')")
@@ -135,7 +136,9 @@ public class SysUserController {
         }
         return R.ok();
     }
-    @ApiOperation("用户登录")
+
+    @LogAnnotation
+    // @ApiOperation("用户登录") 这个接口永远无法访问的到,com.house.agents.security.TokenLoginFilter.successfulAuthentication认证成功之后直接就返回了
     @PostMapping("/login")
     public Result login(@RequestBody LoginVo loginVo){
         SysUser sysUser = sysUserService.getByUsername(loginVo.getUsername());
@@ -168,8 +171,8 @@ public class SysUserController {
         Map<String,Object> userInfoMap = sysUserService.getUserInfoByUserId(sysUser.getId());
 
         //查询所有的账单的数据并存入缓存里面(不设置过期时间)
-        Map<String, List<String>> largeAreaData = bookService.getLargeAreaData(sysUser.getId());
-        redisTemplate.boundValueOps("largeAreaData").set(JSON.toJSON(largeAreaData));
+        // Map<String, List<String>> largeAreaData = bookService.getLargeAreaData(sysUser.getId());
+        // redisTemplate.boundValueOps("largeAreaData").set(JSON.toJSON(largeAreaData));
 
         // return R.ok().data("userInfoMap",userInfoMap);
         return Result.ok(userInfoMap);

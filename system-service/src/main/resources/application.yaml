@@ -14,9 +14,9 @@ spring:
   # 数据库的相关配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://124.222.220.45:32768/HousingAgents?serverTimezone=Asia/Shanghai&allowMultiQueries=true
-    username: ENC(+UqVvXNR//wSI0Qp1xAh/PLrJKYjgnhAoyL5BAvngMvInTuxcijGEkaqtjjfUN8d)
-    password: ENC(vqUawoWuP0ai73FSET+uU4hQN8gELwUediXJ41S86h2zc6G09JV8VqkwdE/89tn0Ntt3uu8kjao8dfuFf4qtHg==)
+    url: jdbc:mysql://39.100.105.236:32768/HousingAgents?serverTimezone=Asia/Shanghai&allowMultiQueries=true
+    username: ENC(fsdUus9+xYb5D50foc7lpYfYY7NScxsU755PObg1GeFJr+JMmejCwadkAxK0kRYQ)
+    password: ENC(Hj0RcjFmH1rZXMFMcL8zkAGL9tq4Owv5YX4cwtbCs4p3PWRq+9ftrpCF8NYJaKT8)
 #    type: com.zaxxer.hikari.HikariDataSource
   # 配置文件的切换配置
   profiles:
@@ -26,10 +26,10 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
   redis:
-    host: 124.222.220.45
+    host: 39.100.105.236
 #    host: ${REMOTE_HOST}
     port: 6379
-    password: ENC(XC2ObTM80vSAsUNA5uTAjMp4OEg09wYpXsVXJS1xm62fZN3dcdocryBJpa6qbMTm)
+    password: ENC(oR37xvi2ZDCwwXjWaCw2tcJyEhWbyGJ0jZasFiD5ItbRUb9gti+2yKn5eMOYt7luIeOWTA9lQf0edrdxTz1RiA==)
 #    password: ${REMOTE_REDIS_PASSWORD}
 mybatis-plus:
   type-aliases-package: com.house.agents.entity
@@ -46,6 +46,10 @@ mybatis-plus:
 jasypt:
   encryptor:
     password: ${JASYPT_PASS}
+#    iv-generator-classname: org.jasypt.iv.NoIvGenerator
+#    iv-generator-classname: org.jasypt.iv.RandomIvGenerator
+#    algorithm: PBEWITHHMACSHA512ANDAES_256
+#    algorithm: PBEWithMD5AndDES
 
 aliyun:
   oss:

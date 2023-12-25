@@ -19,6 +19,6 @@ public interface HouseMapper extends BaseMapper<House> {
     int rePublishDeletedHouse(Long houseId);
     int rePublishDeletedHouses(@Param("houseIds") List<String> houseIds);
     Integer getTotalCount(Long houseId);
-    List<House> getDeletedHousesWithPage(@Param("userId")Long userId,@Param("limitNum")int limitNum,@Param("pageSize")int pageSize);
+    List<House> getDeletedHousesWithPage(@Param("userId")Long userId,@Param("limitNum")int limitNum,@Param("pageSize")int pageSize,@Param("userIds")List<Long> userIds);
 
 }

@@ -66,4 +66,7 @@ public class HouseSearchVo {
     // ===
     @ApiModelProperty(value = "创建用户的id")
     private Long userId;
+
+    @ApiModelProperty(value = "房子所属的房东的姓名")
+    private String landlordName;
 }

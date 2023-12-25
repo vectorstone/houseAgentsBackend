@@ -39,10 +39,10 @@ public class TestDemo231212 {
         // House deletedHouse = houseMapper.getDeletedHouse(1735326701858136066L);
         // System.out.println("deletedHouse = " + deletedHouse);
         // houseService.getById()
-        int totalCount = houseMapper.getTotalCount(1687030184168923138L);
-        System.out.println("totalCount = " + totalCount);
-        List<House> deletedHousesWithPage = houseMapper.getDeletedHousesWithPage(1687030184168923138L, 0, 10);
-        System.out.println("deletedHousesWithPage = " + deletedHousesWithPage);
+        // int totalCount = houseMapper.getTotalCount(1687030184168923138L);
+        // System.out.println("totalCount = " + totalCount);
+        // List<House> deletedHousesWithPage = houseMapper.getDeletedHousesWithPage(1687030184168923138L, 0, 10);
+        // System.out.println("deletedHousesWithPage = " + deletedHousesWithPage);
         // int count = houseService.getCount(1687030184168923138L);
         // System.out.println("count = " + count);
         // List<House> deletedHousesWithPage = houseService.getDeletedHousesWithPage(1687030184168923138L, 1, 10);

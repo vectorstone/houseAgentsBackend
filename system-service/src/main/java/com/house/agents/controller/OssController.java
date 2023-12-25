@@ -5,6 +5,7 @@ import com.house.agents.service.OssService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,6 +25,7 @@ public class OssController {
     OssService ossService;
 
     // requestParam方式传文件的方法
+    // @PreAuthorize("hasAnyAuthority('bnt.house.attachmentUpload')")
     @PostMapping("/upload")
     @ApiOperation("文件上传requestParam的方式")
     public R upload(MultipartFile file,
@@ -38,6 +40,7 @@ public class OssController {
     }
 
     // 删除文件的方法 这个接口理论上来说要鉴权
+    // @PreAuthorize("hasAnyAuthority('bnt.house.remove')")
     @ApiOperation("删除文件")
     @DeleteMapping
     public R deleteFile(@RequestParam("path") String path,@RequestHeader("token") String token) {

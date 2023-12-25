@@ -21,13 +21,41 @@
         </foreach>
     </update>
     
+    <!-- <select id="getTotalCount" resultType="java.lang.Integer"> -->
+    <!--     SELECT COUNT(*) FROM house WHERE is_deleted = 1 AND (user_id = #{userId}) -->
+    <!-- </select> -->
+    
     <select id="getTotalCount" resultType="java.lang.Integer">
-        SELECT COUNT(*) FROM house WHERE is_deleted = 1 AND (user_id = #{userId})
+        SELECT COUNT(*) FROM house
+        <where>
+            is_deleted= 1
+            <if test="userId != 0">
+                and user_id = #{userId}
+            </if>
+        </where>
     </select>
     
-    <select id="getDeletedHousesWithPage" resultType="com.house.agents.entity.House">
+    <!-- <select id="getDeletedHousesWithPage" resultType="com.house.agents.entity.House">
         <include refid="mySelectSql"/>
         where is_deleted= 1 and user_id = #{userId} ORDER BY create_time DESC LIMIT #{limitNum},#{pageSize}
+    </select> -->
+    
+    <!-- 使用动态sql来进行判断是否根据userId查询 -->
+    <select id="getDeletedHousesWithPage" resultType="com.house.agents.entity.House">
+        <include refid="mySelectSql"/>
+        <where>
+            is_deleted= 1
+                <if test="userId != 0">
+                    and user_id = #{userId}
+                </if>
+                <if test="userIds != null and userIds.size > 0">
+                    and user_id in
+                    <foreach collection="userIds" index="index" open="(" separator="," close=")" item="item">
+                        #{item}
+                    </foreach>
+                </if>
+        </where>
+        ORDER BY create_time DESC LIMIT #{limitNum},#{pageSize}
     </select>
     
 </mapper>

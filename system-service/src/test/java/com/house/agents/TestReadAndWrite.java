@@ -1,7 +1,5 @@
 package com.house.agents;
 
-import com.house.agents.entity.Book;
-import com.house.agents.service.BookService;
 import org.jasypt.encryption.StringEncryptor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,25 +17,25 @@ import java.util.List;
  */
 @SpringBootTest
 public class TestReadAndWrite {
-    @Resource
-    private BookService bookService;
-    @Test
-    void test(){
-        Book book = new Book();
-        book.setAmount(new BigDecimal(33.0));
-        bookService.save(book);
-    }
-    @Test
-    void test2(){
-        Book book = new Book();
-        book.setAmount(new BigDecimal(33.0));
-        bookService.save(book);
-    }
-    @Test
-    void test3(){
-        List<Book> list = bookService.list();
-        System.out.println(list);
-    }
+    // @Resource
+    // private BookService bookService;
+    // @Test
+    // void test(){
+    //     Book book = new Book();
+    //     book.setAmount(new BigDecimal(33.0));
+    //     bookService.save(book);
+    // }
+    // @Test
+    // void test2(){
+    //     Book book = new Book();
+    //     book.setAmount(new BigDecimal(33.0));
+    //     bookService.save(book);
+    // }
+    // @Test
+    // void test3(){
+    //     List<Book> list = bookService.list();
+    //     System.out.println(list);
+    // }
 
 
     //获取加密后的密文

@@ -23,7 +23,7 @@ public interface HouseService extends IService<House> {
     void importHouses(MultipartFile file, Long userId);
 
     Page getPageList(Integer pageNum, Integer pageSize, HouseSearchVo houserSearchVo, SysUser sysUser);
-    Page getDeletedPageList(Integer pageNum, Integer pageSize, HouseSearchVo houserSearchVo, Long userId);
+    Page getDeletedPageList(Integer pageNum, Integer pageSize, HouseSearchVo houserSearchVo, SysUser sysUser);
 
     //
     void exportHouses(HttpServletResponse response, Long userId);

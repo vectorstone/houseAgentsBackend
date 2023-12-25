@@ -1,29 +1,25 @@
 package com.house.agents.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.ibatis.type.StringTypeHandler;
+import org.apache.ibatis.type.TypeHandler;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
-/**
- * <p>
- * 
- * </p>
- *
- * @author Gavin
- * @since 2023-07-28
- */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@ApiModel(value="house对象", description="对应数据库中的房子表")
-public class House implements Serializable {
+@ApiModel(value="user_opt_log", description="保存用户操作日志的对象")
+@Builder
+public class UserOptLog {
 
     private static final long serialVersionUID = 1L;
 
@@ -35,29 +31,29 @@ public class House implements Serializable {
     @TableField(value = "user_id")
     private long userId;
 
-    @ApiModelProperty(value = "小区名称")
-    @TableField(value = "community")
-    private String community;
+    @ApiModelProperty(value = "用户名称")
+    @TableField(value = "username")
+    private String username;
 
-    @ApiModelProperty(value = "地铁线路")
-    @TableField(value = "subway")
-    private String subway;
+    @ApiModelProperty(value = "用户ip地址")
+    @TableField(value = "ip")
+    private String ip;
 
-    @ApiModelProperty(value = "楼栋及房间号")
-    @TableField(value = "room_number")
-    private String roomNumber;
+    @ApiModelProperty(value = "用户的操作")
+    @TableField(value = "operation")
+    private String operation;
 
-    @ApiModelProperty(value = "月租金")
-    @TableField(value = "rent")
-    private BigDecimal rent;
+    @ApiModelProperty(value = "用户的请求参数")
+    @TableField(value = "request",typeHandler = JacksonTypeHandler.class)
+    private String request;
 
-    @ApiModelProperty(value = "朝向")
-    @TableField(value = "orientation")
-    private String orientation;
+    @ApiModelProperty(value = "请求的响应结果")
+    @TableField(value = "response",typeHandler = JacksonTypeHandler.class)
+    private String response;
 
-    @ApiModelProperty(value = "钥匙位置或密码")
-    @TableField(value = "keyOrPassword")
-    private String keyOrPassword;
+    @ApiModelProperty(value = "程序运行的时间")
+    @TableField(value = "performanceTime")
+    private String performanceTime;
 
     @ApiModelProperty(value = "备注")
     @TableField(value = "remark")
@@ -80,11 +76,4 @@ public class House implements Serializable {
     @TableLogic
     private Boolean deleted;
 
-    @ApiModelProperty(value = "房子所属的附件url集合")
-    @TableField(exist = false)
-    private List<HouseAttachment> houseAttachment;
-
-    @ApiModelProperty(value = "房子所属的房东的姓名")
-    @TableField(exist = false)
-    private String landlordName;
 }

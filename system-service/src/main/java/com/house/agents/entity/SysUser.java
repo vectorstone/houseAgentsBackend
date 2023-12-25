@@ -55,6 +55,10 @@ public class SysUser implements Serializable {
     @ApiModelProperty(value = "状态（1：正常 0：停用）")
     private Integer status;
 
+    //indifier
+    @ApiModelProperty(value = "indifier",name = "用户身份标识")
+    private Integer identifier;
+
     @ApiModelProperty(value = "创建时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     //设置自动填充的时机 指定新增时和更新时填充字段,我们这里新增的时候创建create和update时间
