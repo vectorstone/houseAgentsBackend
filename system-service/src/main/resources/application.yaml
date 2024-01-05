@@ -58,3 +58,9 @@ aliyun:
     bucketName: house-agents
     #accessKeyId: 不安全,不使用这种方式
     #accessKeySecret: 不安全,不使用这种方式
+# 线程池的参数
+threadPool:
+  corePoolSize: 500
+  maximumPoolSize: 5000
+  keepAliveTime: 60
+  workQueueSize: 10000

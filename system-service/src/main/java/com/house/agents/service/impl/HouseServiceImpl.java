@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.collect.Maps;
 import com.house.agents.entity.House;
 import com.house.agents.entity.HouseAttachment;
 import com.house.agents.entity.SysRole;
@@ -20,6 +21,7 @@ import com.house.agents.service.HouseService;
 import com.house.agents.service.SysUserService;
 import com.house.agents.utils.Asserts;
 import com.house.agents.utils.BusinessException;
+import com.house.agents.utils.XMDLogFormat;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.compress.utils.Lists;
@@ -34,8 +36,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 /**
@@ -188,6 +194,8 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         // 只要当前该用户拥有的角色列表里面有任何一个角色的roleCode和SYSTEM相等,说明该用户具有管理员的权限,那么就默认查询所有的数据
         return roleList.stream().map(SysRole::getRoleCode).anyMatch(roleCode -> roleCode.equals("SYSTEM"));
     }
+    @Autowired
+    ExecutorService executorService;
 
     /**
      * 该方法用来设置house额外的附件的信息以及房东姓名的属性
@@ -197,14 +205,37 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         if (housePageData != null && CollectionUtils.isNotEmpty(housePageData.getRecords())) {
             // 如果查询出来的结果不为空的话,那么就设置对应的房子的附件进去
             List<House> houses = housePageData.getRecords();
+            HashMap<Long, CompletableFuture<List<HouseAttachment>>> houseAttachmentCfMap = Maps.newHashMap();
+            HashMap<Long, CompletableFuture<SysUser>> sysUserCfMap = Maps.newHashMap();
             houses.forEach(house -> {
+                try {
                 // 查询房子所属的附件并设置进去
-                List<HouseAttachment> houseAttachments = houseAttachmentService.list(
-                        Wrappers.lambdaQuery(HouseAttachment.class).eq(HouseAttachment::getHouseId, house.getId()));
-                house.setHouseAttachment(houseAttachments);
+                CompletableFuture<List<HouseAttachment>> houseAttachmentCf = CompletableFuture.supplyAsync(() -> houseAttachmentService.list(
+                        Wrappers.lambdaQuery(HouseAttachment.class).eq(HouseAttachment::getHouseId, house.getId())), executorService);
+
                 // 查询房子所属的房东并设置进去
-                SysUser landlord = sysUserService.getById(house.getUserId());
-                house.setLandlordName(landlord.getName());
+                CompletableFuture<SysUser> sysUserCf = CompletableFuture.supplyAsync(() -> sysUserService.getById(house.getUserId()), executorService);
+
+                houseAttachmentCfMap.put(house.getId(),houseAttachmentCf);
+                sysUserCfMap.put(house.getId(),sysUserCf);
+
+                // house.setHouseAttachment(houseAttachmentCf.get());
+                // house.setLandlordName(sysUserCf.get().getName());
+                } catch (Exception e) {
+                    log.info(XMDLogFormat.build().putTag("interfaceName","setExtraAttributes").message(e.getMessage()));
+                    throw new RuntimeException(e);
+                }
+            });
+
+            houses.forEach(house -> {
+                Long houseId = house.getId();
+                try {
+                    house.setHouseAttachment(houseAttachmentCfMap.get(houseId).get());
+                    house.setLandlordName(sysUserCfMap.get(houseId).get().getName());
+                } catch (Exception e) {
+                    log.info(XMDLogFormat.build().putTag("interfaceName","setExtraAttributes").message(e.getMessage()));
+                    throw new RuntimeException(e);
+                }
             });
         }
     }
