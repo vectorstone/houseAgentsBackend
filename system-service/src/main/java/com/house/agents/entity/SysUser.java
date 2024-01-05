@@ -55,8 +55,8 @@ public class SysUser implements Serializable {
     @ApiModelProperty(value = "状态（1：正常 0：停用）")
     private Integer status;
 
-    //indifier
-    @ApiModelProperty(value = "indifier",name = "用户身份标识")
+    //identifier
+    @ApiModelProperty(value = "identifier",name = "用户身份标识")
     private Integer identifier;
 
     @ApiModelProperty(value = "创建时间")

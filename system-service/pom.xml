@@ -18,6 +18,14 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/com.dianping.cat/cat-client -->
+        <!-- 引入cat -->
+        <dependency>
+            <groupId>com.dianping.cat</groupId>
+            <artifactId>cat-client</artifactId>
+            <version>4.0-RC1</version>
+        </dependency>
+    
         <!-- https://mvnrepository.com/artifact/com.google.collections/google-collections Mps.newHashmap-->
         <!-- <dependency> -->
         <!--     <groupId>com.google.collections</groupId> -->
@@ -173,6 +181,59 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <!-- docker打包插件，groupId、artifactId、version表示插件自生的版本信息 -->
+            <!-- <plugin> -->
+            <!--     <groupId>com.spotify</groupId> -->
+            <!--     <artifactId>dockerfile-maven-plugin</artifactId> -->
+            <!--     <version>${dockerfile-maven-plugin.version}</version> -->
+            <!--     <configuration> -->
+            <!--         <useMavenSettingsForAuth>true</useMavenSettingsForAuth> &lt;!&ndash; 是否使用maven配置(仓库账号密码)来进行推送认证 &ndash;&gt; -->
+            <!--         <repository>${docker.image.prefix}/qrcode-admin</repository> &lt;!&ndash; 指定镜像构建后要推送的仓库地址 &ndash;&gt; -->
+            <!--         <tag>1.1.0_prod</tag>  &lt;!&ndash; 指定构建镜像的版本tag &ndash;&gt; -->
+            <!--         <buildArgs> &lt;!&ndash; 构建参数，该节点下的参数将在构建时传递给Dockerfile文件，与文件中ARG声明的变量对应 &ndash;&gt; -->
+            <!--             <JAR_FILE>target/qrcode-admin.jar</JAR_FILE> -->
+            <!--         </buildArgs> -->
+            <!--         <skipTags>true</skipTags> &lt;!&ndash; 跳过默认标记 &ndash;&gt; -->
+            <!--         <useCache>false</useCache> &lt;!&ndash; 关闭缓存机制 &ndash;&gt; -->
+            <!--         <forceTag>true</forceTag> &lt;!&ndash; 强制创建新标记 &ndash;&gt; -->
+            <!--         <verbose>true</verbose> &lt;!&ndash; 输出更详细信息 &ndash;&gt; -->
+            <!--         <pushImage>true</pushImage> &lt;!&ndash; 是否将镜像推送到Docker Registry &ndash;&gt; -->
+            <!--         <contextDirectory>/path/</contextDirectory> &lt;!&ndash; 指定构建的上下文目录，该目录中的文件和目录会被复制到Docker镜像中。默认情况下dockerfile-maven-plugin会将Maven项目的根目录作为构建上下文目录&ndash;&gt; -->
+            <!--         <dockerfile>src/main/docker/Dockerfile</dockerfile>&lt;!&ndash; Dockerfile所在目录路径 &ndash;&gt; -->
+            <!--         <additionalBuildArgs>&#45;&#45;no-cache=true &#45;&#45;pull=true</additionalBuildArgs> &lt;!&ndash; 添加其他构建参数 &ndash;&gt; -->
+            <!--     </configuration> -->
+            <!-- </plugin> -->
+            <!-- <plugin> -->
+            <!--     <groupId>com.spotify</groupId> -->
+            <!--     <artifactId>docker-maven-plugin</artifactId> -->
+            <!--     &lt;!&ndash;将插件绑定在某个阶段执行&ndash;&gt; -->
+            <!--     <executions> -->
+            <!--         <execution> -->
+            <!--             <id>build-image</id> -->
+            <!--             &lt;!&ndash;将插件绑定在package这个phase(阶段)上。也就是说，用户只需执行mvn package，就会自动执行mvn docker:build&ndash;&gt; -->
+            <!--             <phase>package</phase> -->
+            <!--             <goals> -->
+            <!--                 <goal>build</goal> -->
+            <!--             </goals> -->
+            <!--         </execution> -->
+            <!--     </executions> -->
+            <!--     <configuration> -->
+            <!--         &lt;!&ndash;指定生成的镜像名&ndash;&gt; -->
+            <!--         <imageName>${project.artifactId}</imageName> -->
+            <!--         &lt;!&ndash;指定标签,也就是版本号,可以自定义&ndash;&gt; -->
+            <!--         <imageTags> -->
+            <!--             <imageTag>v2.0</imageTag> -->
+            <!--         </imageTags> -->
+            <!--         &lt;!&ndash;指定远程 docker api地址 也就是服务器ip+docker的端口号 -->
+            <!--                             还需要到docker服务中开启支持远程连接 -->
+            <!--                     &ndash;&gt; -->
+            <!--         <dockerHost>http://192.168.1.170:2375</dockerHost> -->
+            <!--         &lt;!&ndash; 指定 dockerfile 路径&ndash;&gt; -->
+            <!--         <dockerDirectory>${project.basedir}</dockerDirectory> -->
+            <!--         &lt;!&ndash; 是否跳过docker构建: 忽略报错 &ndash;&gt; -->
+            <!--         <skipdockerBuild>false</skipdockerBuild> -->
+            <!--     </configuration> -->
+            <!-- </plugin> -->
         </plugins>
     </build>
 

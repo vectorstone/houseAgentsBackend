@@ -2,6 +2,9 @@ package com.house.agents.controller;
 
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dianping.cat.Cat;
+import com.dianping.cat.message.Event;
+import com.dianping.cat.message.Transaction;
 import com.house.agents.annotation.LogAnnotation;
 import com.house.agents.entity.*;
 import com.house.agents.entity.vo.HouseSearchVo;
@@ -9,6 +12,7 @@ import com.house.agents.result.R;
 import com.house.agents.result.ResponseEnum;
 import com.house.agents.service.HouseService;
 import com.house.agents.service.SubwayService;
+import com.house.agents.utils.Asserts;
 import com.house.agents.utils.BusinessException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -23,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * <p>
@@ -46,12 +51,38 @@ public class HouseController {
     @Autowired
     private SubwayService subwayService;
 
+    @PreAuthorize("hasAnyAuthority('bnt.house.list')")
+    @ApiOperation("获取房子的详细的情况")
+    @PostMapping("/{houseId}")
+    @LogAnnotation
+    public R getHouseInfo(@PathVariable("houseId") String houseId, @RequestHeader("token") String token) {
+        // excel也是只能上传自己的账单数据,不能上传别人的数据
+        SysUser sysUser = validUser(token);
+        Long userId = sysUser.getId();
+        House house = houseService.getById(houseId);
+        // Cat.logEvent("getHouseInfo","getHouseInfo");
+        if ((house == null || house.getUserId() != userId) && !isAdmin(sysUser)){
+            // 进来这里面就不返回对应的数据
+            return R.ok();
+        }
+        return R.ok().data("item",house);
+    }
+
+    private SysUser validUser(String token) {
+        // Cat.logEvent("validUser","validUser");
+        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        Asserts.AssertNotNull(sysUser,ResponseEnum.ARGUMENT_VALID_ERROR);
+        return sysUser;
+    }
+
     @PreAuthorize("hasAnyAuthority('bnt.house.excelUpload')")
     @ApiOperation("待出租房excel表格的上传功能")
     @PostMapping("/import")
+    @LogAnnotation
     public R importHouse(@RequestParam("file") MultipartFile file, @RequestHeader("token") String token) {
         // excel也是只能上传自己的账单数据,不能上传别人的数据
-        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        // Cat.logEvent("importHouse","importHouse");
+        SysUser sysUser = validUser(token);
         Long userId = sysUser.getId();
         houseService.importHouses(file, userId);
         return R.ok();
@@ -71,9 +102,25 @@ public class HouseController {
         stopWatch.start("分页查询开始");
 
         // 所有的账单的查询必须只能查询自己的,实现多用户的账单数据的隔离
-        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        SysUser sysUser = validUser(token);
         Long userId = sysUser.getId();
         Page page = houseService.getPageList(pageNum, pageSize, houseSearchVo, sysUser);
+
+        // Transaction t = Cat.newTransaction("URL", "pageName");
+        // try {
+        //     Cat.logEvent("test1","getList");
+        //     Cat.logEvent("URL1.Server", "serverIp", Event.SUCCESS, "ip=${serverIp}");
+        //     Cat.logMetricForCount("metric1.key");
+        //     Cat.logMetricForDuration("metric1.key", 5);
+        //
+        //     t.setStatus(Transaction.SUCCESS);
+        // } catch (Exception e) {
+        //     t.setStatus(e);
+        //     Cat.logError(e);
+        // } finally {
+        //     t.complete();
+        // }
+
 
         stopWatch.stop();
         log.info("com.house.agents.controller.HouseController.getList运行时长是: " + stopWatch.prettyPrint());
@@ -83,15 +130,17 @@ public class HouseController {
     @PreAuthorize("hasAnyAuthority('bnt.house.list')")
     @ApiOperation("分页查询已经下架了的房子信息")
     @PostMapping("/deleted/{pageNum}/{pageSize}")
+    @LogAnnotation
     public R getDeletedList(/* @RequestParam(value = "searchVo",required = false) SearchVo searchVo */
             @RequestBody HouseSearchVo houseSearchVo,
             @PathVariable("pageNum") Integer pageNum,
             @PathVariable("pageSize") Integer pageSize,
             @RequestHeader("token") String token) {
+        // Cat.logEvent("getDeletedList","getDeletedList");
         StopWatch stopWatch = new StopWatch();
         stopWatch.start("已经下架了的房子分页查询开始");
         // 所有的账单的查询必须只能查询自己的,实现多用户的账单数据的隔离
-        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        SysUser sysUser = validUser(token);
         Page page = houseService.getDeletedPageList(pageNum, pageSize, houseSearchVo, sysUser);
         stopWatch.stop();
         log.info("com.house.agents.controller.HouseController.getDeletedList运行时长是: " + stopWatch.prettyPrint());
@@ -101,9 +150,11 @@ public class HouseController {
     @PreAuthorize("hasAnyAuthority('bnt.house.excelDownload')")
     @ApiOperation("房子信息导出为excel")
     @GetMapping("/export")
+    @LogAnnotation
     // 这个地方不能有返回值,否则会覆盖服务器给前端的response响应
     public void download(HttpServletResponse response, @RequestHeader(required = true, name = "token") String token) {
-        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        // Cat.logEvent("download","download");
+        SysUser sysUser = validUser(token);
         Long userId = sysUser.getId();
 
         houseService.exportHouses(response, userId);
@@ -112,8 +163,10 @@ public class HouseController {
     @PreAuthorize("hasAnyAuthority('bnt.house.remove')")
     @ApiOperation("根据id删除房子")
     @DeleteMapping("/{id}")
+    @LogAnnotation
     public R removeById(@PathVariable("id") String id, @RequestHeader("token") String token) {
-        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        // Cat.logEvent("removeById","removeById");
+        SysUser sysUser = validUser(token);
         Long userId = sysUser.getId();
 
         // 加个判断,如果修改的不是自己的账单的数据抛出异常
@@ -126,6 +179,7 @@ public class HouseController {
     }
 
     private boolean isAdmin(SysUser sysUser) {
+        // Cat.logEvent("isAdmin","isAdmin");
         List<SysRole> roleList = sysUser.getRoleList();
         if (CollectionUtils.isEmpty(roleList)){
             // 如果roleList为空的话,那么说明是有问题的,需要抛出一场
@@ -138,8 +192,10 @@ public class HouseController {
     @PreAuthorize("hasAnyAuthority('bnt.house.update')")
     @ApiOperation("重新上架房子")
     @PutMapping("/{houseId}")
+    @LogAnnotation
     public R rePublishHouse(@PathVariable("houseId") String houseId, @RequestHeader("token") String token) {
-        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        // Cat.logEvent("rePublishHouse","rePublishHouse");
+        SysUser sysUser = validUser(token);
         Long userId = sysUser.getId();
         // 加个判断,如果修改的不是自己的账单的数据抛出异常
         House house = houseService.getByIdDeleted(Long.valueOf(houseId));
@@ -153,8 +209,10 @@ public class HouseController {
     @PreAuthorize("hasAnyAuthority('bnt.house.update')")
     @ApiOperation("根据id修改房子信息")
     @PutMapping
+    @LogAnnotation
     public R updateById(@RequestBody House house, @RequestHeader("token") String token) {
-        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        // Cat.logEvent("updateById","updateById");
+        SysUser sysUser = validUser(token);
         Long userId = sysUser.getId();
         // 加个判断,如果修改的不是自己的账单的数据抛出异常
         if (house.getUserId() != userId && !isAdmin(sysUser)) {
@@ -167,8 +225,10 @@ public class HouseController {
     @PreAuthorize("hasAnyAuthority('bnt.house.add')")
     @ApiOperation("新增房子信息")
     @PostMapping
+    @LogAnnotation
     public R save(@RequestBody House house, @RequestHeader("token") String token) {
-        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        // Cat.logEvent("save","save");
+        SysUser sysUser = validUser(token);
         Long userId = sysUser.getId();
         house.setUserId(userId);
         houseService.save(house);
@@ -177,8 +237,10 @@ public class HouseController {
     @PreAuthorize("hasAnyAuthority('bnt.house.remove')")
     @ApiOperation("批量删除")
     @DeleteMapping()
+    @LogAnnotation
     public R batchRemoveByIds(@RequestBody List<String> houseIds, @RequestHeader("token") String token) {
-        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        // Cat.logEvent("batchRemoveByIds","batchRemoveByIds");
+        SysUser sysUser = validUser(token);
         Long userId = sysUser.getId();
         // 加个判断,如果修改的不是自己房子的数据抛出异常
         boolean checkUser = houseIds.stream().map(houseId -> {
@@ -195,8 +257,10 @@ public class HouseController {
     @PreAuthorize("hasAnyAuthority('bnt.house.update')")
     @ApiOperation("批量重新上架")
     @PutMapping("/batch/republish")
+    @LogAnnotation
     public R batchRepublishByIds(@RequestBody List<String> houseIds, @RequestHeader("token") String token){
-        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        // Cat.logEvent("batchRepublishByIds","batchRepublishByIds");
+        SysUser sysUser = validUser(token);
         Long userId = sysUser.getId();
         // 加个判断,如果修改的不是自己房子的数据抛出异常
         boolean checkUser = houseIds.stream().map(houseId -> {
@@ -214,7 +278,9 @@ public class HouseController {
     @PreAuthorize("hasAnyAuthority('bnt.house.list')")
     @ApiOperation(value = "获取地铁线路信息")
     @GetMapping("/subway")
+    @LogAnnotation
     public R getSubway(){
+        // Cat.logEvent("getSubway","getSubway");
         List<Subway> list = subwayService.list();
         return R.ok().data("items",list);
     }
