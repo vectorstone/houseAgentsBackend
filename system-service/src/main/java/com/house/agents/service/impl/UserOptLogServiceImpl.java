@@ -27,6 +27,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -48,4 +49,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserOptLogServiceImpl extends ServiceImpl<UserOptLogMapper, UserOptLog> implements UserOptLogService {
 
+    @Autowired
+    UserOptLogMapper userOptLogMapper;
+    @Async
+    @Override
+    public void saveLog(UserOptLog userOptLog) {
+        userOptLogMapper.insert(userOptLog);
+    }
 }

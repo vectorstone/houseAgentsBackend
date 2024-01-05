@@ -35,6 +35,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -92,7 +93,9 @@ public class LogAspect {
         UserOptLog.UserOptLogBuilder userOptLogBuilder = null;
         if (StringUtils.isNotEmpty(token)){
             SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
-            userOptLogBuilder = UserOptLog.builder().userId(sysUser.getId()).username(sysUser.getUsername());
+            Long userId = Optional.ofNullable(sysUser).map(SysUser::getId).orElse(0L);
+            String username = Optional.ofNullable(sysUser).map(SysUser::getUsername).orElse("");
+            userOptLogBuilder = UserOptLog.builder().userId(userId).username(username);
         }
 
         // 获取用户的IP地址
@@ -140,7 +143,9 @@ public class LogAspect {
                 afterRuntime = runtime / 1000000;
             }
             UserOptLog userOptLog = userOptLogBuilder.ip(ipAddr).operation(methodName).request("reqParam").response("respParam").performanceTime(String.valueOf(afterRuntime) + "ms").build();
-            userOptLogService.save(userOptLog);
+            // 将保存日志的操作修改为异步的方式
+            // userOptLogService.save(userOptLog);
+            userOptLogService.saveLog(userOptLog);
         } catch (NumberFormatException e) {
             log.info(XMDLogFormat.build().putTag("interfaceName","aroundMethod").message(e.getMessage()));
         }

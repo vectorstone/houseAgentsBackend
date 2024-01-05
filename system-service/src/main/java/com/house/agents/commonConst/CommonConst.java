@@ -7,4 +7,5 @@ public interface CommonConst {
     String KEY_PREFIX = "";
     String LOCK_PREFIX = "";
 
+    String EXCEPTION_KEY = "asyncException";
 }

@@ -20,6 +20,6 @@ import java.util.List;
  * @since 2023-07-28
  */
 public interface UserOptLogService extends IService<UserOptLog> {
-
+    void saveLog(UserOptLog userOptLog);
 
 }

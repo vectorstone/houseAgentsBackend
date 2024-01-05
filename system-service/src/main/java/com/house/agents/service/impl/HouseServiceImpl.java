@@ -195,7 +195,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         return roleList.stream().map(SysRole::getRoleCode).anyMatch(roleCode -> roleCode.equals("SYSTEM"));
     }
     @Autowired
-    ExecutorService executorService;
+    private ExecutorService executorService;
 
     /**
      * 该方法用来设置house额外的附件的信息以及房东姓名的属性
