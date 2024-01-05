@@ -5,9 +5,7 @@ import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 import org.apache.ibatis.type.StringTypeHandler;
 import org.apache.ibatis.type.TypeHandler;
 
@@ -19,6 +17,8 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @ApiModel(value="user_opt_log", description="保存用户操作日志的对象")
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserOptLog {
 
     private static final long serialVersionUID = 1L;

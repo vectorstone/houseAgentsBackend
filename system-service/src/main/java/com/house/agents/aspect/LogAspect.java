@@ -36,6 +36,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -59,6 +61,9 @@ public class LogAspect {
     // PmsFeign pmsFeign;
     @Autowired
     private UserOptLogService userOptLogService;
+
+    @Autowired
+    private ExecutorService executorService;
 
     //预留一个位置,切点表达式的重用,这个切点表达式会对service里面的所有的方法起作用
     // @Pointcut(value = "execution(* com.house.gmall.index.service.*.*(..))")
@@ -85,75 +90,86 @@ public class LogAspect {
         Object[] args = joinPoint.getArgs();
         // 获取目标方法的签名 根据这个签名可以获取到目标方法的返回类型已经方法名称之类的信息
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-
-        // 如何获取用户信息呢
-        Map<String, Object> fieldsName = getFieldsName(joinPoint);
-        String token = (String) fieldsName.get("token");
-        // SysUser sysUser = null;
-        UserOptLog.UserOptLogBuilder userOptLogBuilder = null;
-        if (StringUtils.isNotEmpty(token)){
-            SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
-            Long userId = Optional.ofNullable(sysUser).map(SysUser::getId).orElse(0L);
-            String username = Optional.ofNullable(sysUser).map(SysUser::getUsername).orElse("");
-            userOptLogBuilder = UserOptLog.builder().userId(userId).username(username);
-        }
-
-        // 获取用户的IP地址
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        //IP地址
-        String ipAddr = getRemoteHost(request);
-        // 获取用户请求的url路径
-        String url = request.getRequestURL().toString();
-        // 火山群用户请求的参数
-        // String reqParam = preHandle(joinPoint,request);
-        String reqParam = JSON.toJSONString(fieldsName);
-
         // 获取目标方法上的注解(因为需要注解里面的相关的一些的参数)
         Method method = signature.getMethod();
-        LogAnnotation annotation = method.getAnnotation(LogAnnotation.class);
+        // LogAnnotation annotation = method.getAnnotation(LogAnnotation.class);
         String methodName = method.getName();
+
+        UserOptLog userOptLog = new UserOptLog();
+
+        CompletableFuture<Map<String, Object>> fieldsNameCf = CompletableFuture.supplyAsync(() -> {
+            try {
+                return getFieldsName(joinPoint);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, executorService);
+
+
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start("分页查询开始");
-
         // 3.执行目标方法查询数据库
         Object result = joinPoint.proceed(args);
-
         // 获取响应的结果
         String respParam = postHandle(result);
-
         stopWatch.stop();
-        // log.info("com.house.agents.controller.HouseController.getList运行时长是: " + stopWatch.prettyPrint());
 
-        String performanceTime = stopWatch.prettyPrint();
-        /*
-        StopWatch '': running time = 1663391100 ns
-        ---------------------------------------------
-        ns         %     Task name
-        ---------------------------------------------
-        1663391100  100%  分页查询开始
-         */
-        try {
-            long afterRuntime = -1;
-            if (StringUtils.isNotEmpty(performanceTime)){
-                int start = performanceTime.indexOf("=") + 2;
-                int end = performanceTime.indexOf(" ns");
-                String time = performanceTime.substring(start, end);
-                long runtime = Long.parseLong(time);
-                afterRuntime = runtime / 1000000;
+        CompletableFuture<Void> userInfoCf = fieldsNameCf.thenAcceptAsync(t -> {
+            // 如何获取用户信息呢
+            // Map<String, Object> fieldsName = getFieldsName(joinPoint);
+            String token = (String) t.get("token");
+            // SysUser sysUser = null;
+
+            // UserOptLog.UserOptLogBuilder userOptLogBuilder = null;
+            if (StringUtils.isNotEmpty(token)) {
+                SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+                Long userId = Optional.ofNullable(sysUser).map(SysUser::getId).orElse(0L);
+                String username = Optional.ofNullable(sysUser).map(SysUser::getUsername).orElse("");
+                userOptLog.setUserId(userId);
+                userOptLog.setUsername(username);
+                // userOptLogBuilder = UserOptLog.builder().userId(userId).username(username);
             }
-            UserOptLog userOptLog = userOptLogBuilder.ip(ipAddr).operation(methodName).request("reqParam").response("respParam").performanceTime(String.valueOf(afterRuntime) + "ms").build();
-            // 将保存日志的操作修改为异步的方式
-            // userOptLogService.save(userOptLog);
-            userOptLogService.saveLog(userOptLog);
-        } catch (NumberFormatException e) {
-            log.info(XMDLogFormat.build().putTag("interfaceName","aroundMethod").message(e.getMessage()));
-        }
-
-        HashMap<String, String> logTagMap = new HashMap<>();
-        logTagMap.put("interfaceName",methodName);
-        logTagMap.put("url",url);
-        log.info(XMDLogFormat.build().putTags(logTagMap).message("request = " + reqParam) + " reponse = " + respParam);
+        },executorService);
+        CompletableFuture<Void> logAndIpCf = fieldsNameCf.thenAcceptAsync(t -> {
+            // 获取用户的IP地址
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            //IP地址
+            String ipAddr = getRemoteHost(request);
+            // 获取用户请求的url路径
+            String url = request.getRequestURL().toString();
+            // 获取用户请求的参数
+            // String reqParam = preHandle(joinPoint,request);
+            String reqParam = JSON.toJSONString(t);
+            HashMap<String, String> logTagMap = new HashMap<>();
+            logTagMap.put("interfaceName", methodName);
+            logTagMap.put("url", url);
+            log.info(XMDLogFormat.build().putTags(logTagMap).message("request = " + reqParam) + " reponse = " + respParam);
+            userOptLog.setIp(ipAddr);
+            userOptLog.setOperation(methodName);
+        }, executorService);
+        // StopWatch '': running time = 1663391100 ns
+        String performanceTime = stopWatch.prettyPrint();
+        CompletableFuture<Void> setPerformanceCf = CompletableFuture.runAsync(() -> {
+            long afterRuntime = -1;
+            try {
+                if (StringUtils.isNotEmpty(performanceTime)) {
+                    int start = performanceTime.indexOf("=") + 2;
+                    int end = performanceTime.indexOf(" ns");
+                    String time = performanceTime.substring(start, end);
+                    long runtime = Long.parseLong(time);
+                    afterRuntime = runtime / 1000000;
+                }
+                userOptLog.setPerformanceTime(afterRuntime + "ms");
+            } catch (NumberFormatException e) {
+                log.info(XMDLogFormat.build().putTag("interfaceName", "aroundMethod").message(e.getMessage()));
+            }
+        }, executorService);
+        CompletableFuture.allOf(userInfoCf,logAndIpCf,setPerformanceCf).join();
+        // UserOptLog userOptLog = userOptLogBuilder.ip(ipAddr).operation(methodName).request("reqParam").response("respParam").performanceTime(afterRuntime + "ms").build();
+        // 将保存日志的操作修改为异步的方式
+        // userOptLogService.save(userOptLog);
+        userOptLogService.saveLog(userOptLog);
 
         return result;
     }
