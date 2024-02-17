@@ -131,9 +131,12 @@ public class LogAspect {
                 // userOptLogBuilder = UserOptLog.builder().userId(userId).username(username);
             }
         },executorService);
+
+        // 获取request的代码不能放到CompletableFuture里面,不然就会出现NPE,猜测是异步任务的时候线程变了,请求自然也不一样了
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         CompletableFuture<Void> logAndIpCf = fieldsNameCf.thenAcceptAsync(t -> {
             // 获取用户的IP地址
-            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            // HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
             //IP地址
             String ipAddr = getRemoteHost(request);
             // 获取用户请求的url路径
@@ -166,6 +169,7 @@ public class LogAspect {
             }
         }, executorService);
         CompletableFuture.allOf(userInfoCf,logAndIpCf,setPerformanceCf).join();
+        // CompletableFuture.allOf(userInfoCf,setPerformanceCf).join();
         // UserOptLog userOptLog = userOptLogBuilder.ip(ipAddr).operation(methodName).request("reqParam").response("respParam").performanceTime(afterRuntime + "ms").build();
         // 将保存日志的操作修改为异步的方式
         // userOptLogService.save(userOptLog);

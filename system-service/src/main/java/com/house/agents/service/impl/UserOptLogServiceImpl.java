@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -54,6 +55,11 @@ public class UserOptLogServiceImpl extends ServiceImpl<UserOptLogMapper, UserOpt
     @Async
     @Override
     public void saveLog(UserOptLog userOptLog) {
+        // try {
+        //     TimeUnit.SECONDS.sleep(4);
+        // } catch (InterruptedException e) {
+        //     throw new RuntimeException(e);
+        // }
         userOptLogMapper.insert(userOptLog);
     }
 }
