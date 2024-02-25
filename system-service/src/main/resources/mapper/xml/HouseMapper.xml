@@ -4,7 +4,7 @@
 
     <!-- 使用sql标签抽取重复出现的SQL片段 -->
     <sql id="mySelectSql">
-        select id,user_id,community,subway,room_number,rent,orientation,keyOrPassword,remark,create_time,update_time,is_deleted AS deleted from house
+        select id,user_id,community,landlordName,subway,room_number,rent,orientation,keyOrPassword,remark,create_time,update_time,is_deleted AS deleted from house
     </sql>
 
     <select id="getDeletedHouse" resultType="com.house.agents.entity.House">

@@ -115,6 +115,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         // 构建查询的条件
         if (houseSearchVo != null) {
             // 小区名称
+            String houseId = houseSearchVo.getId();
             String community = houseSearchVo.getCommunity();
             String subway = houseSearchVo.getSubway();
             String roomNumber = houseSearchVo.getRoomNumber();
@@ -123,27 +124,24 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
             String remark = houseSearchVo.getRemark();
             String landlordName = houseSearchVo.getLandlordName();
 
-            if (StringUtils.isNotEmpty(landlordName)){
-                List<SysUser> landlords = sysUserService.list(Wrappers.lambdaQuery(SysUser.class).like(SysUser::getName, landlordName));
-                if (CollectionUtils.isNotEmpty(landlords)){
-                    // 根据房东的姓名查询出来对应的userId
-                    List<Long> userIds = landlords.stream().map(SysUser::getId).collect(Collectors.toList());
-                    wrapper.in(House::getUserId,userIds);
-                }
-            }
+            // if (StringUtils.isNotEmpty(landlordName)){
+            //     List<SysUser> landlords = sysUserService.list(Wrappers.lambdaQuery(SysUser.class).like(SysUser::getName, landlordName));
+            //     if (CollectionUtils.isNotEmpty(landlords)){
+            //         // 根据房东的姓名查询出来对应的userId
+            //         List<Long> userIds = landlords.stream().map(SysUser::getId).collect(Collectors.toList());
+            //         wrapper.in(House::getUserId,userIds);
+            //     }
+            // }
+            if (StringUtils.isNotEmpty(houseId)) wrapper.eq(House::getId,houseId);
+
+            if (StringUtils.isNotEmpty(landlordName)) wrapper.like(House::getLandlordName, landlordName);
 
             // 模糊
-            if (StringUtils.isNotEmpty(community)) {
-                wrapper.like(House::getCommunity, community);
-            }
+            if (StringUtils.isNotEmpty(community)) wrapper.like(House::getCommunity, community);
 
-            if (StringUtils.isNotEmpty(subway)) {
-                wrapper.like(House::getSubway, subway);
-            }
+            if (StringUtils.isNotEmpty(subway)) wrapper.like(House::getSubway, subway);
 
-            if (StringUtils.isNotEmpty(roomNumber)) {
-                wrapper.like(House::getRoomNumber, roomNumber);
-            }
+            if (StringUtils.isNotEmpty(roomNumber)) wrapper.like(House::getRoomNumber, roomNumber);
 
             setSearchVoRent(houseSearchVo);
             BigDecimal startRent = houseSearchVo.getStartRent();
@@ -206,7 +204,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
             // 如果查询出来的结果不为空的话,那么就设置对应的房子的附件进去
             List<House> houses = housePageData.getRecords();
             HashMap<Long, CompletableFuture<List<HouseAttachment>>> houseAttachmentCfMap = Maps.newHashMap();
-            HashMap<Long, CompletableFuture<SysUser>> sysUserCfMap = Maps.newHashMap();
+            // HashMap<Long, CompletableFuture<SysUser>> sysUserCfMap = Maps.newHashMap();
             houses.forEach(house -> {
                 try {
                 // 查询房子所属的附件并设置进去
@@ -214,10 +212,10 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
                         Wrappers.lambdaQuery(HouseAttachment.class).eq(HouseAttachment::getHouseId, house.getId())), executorService);
 
                 // 查询房子所属的房东并设置进去
-                CompletableFuture<SysUser> sysUserCf = CompletableFuture.supplyAsync(() -> sysUserService.getById(house.getUserId()), executorService);
+                // CompletableFuture<SysUser> sysUserCf = CompletableFuture.supplyAsync(() -> sysUserService.getById(house.getUserId()), executorService);
 
                 houseAttachmentCfMap.put(house.getId(),houseAttachmentCf);
-                sysUserCfMap.put(house.getId(),sysUserCf);
+                // sysUserCfMap.put(house.getId(),sysUserCf);
 
                 // house.setHouseAttachment(houseAttachmentCf.get());
                 // house.setLandlordName(sysUserCf.get().getName());
@@ -231,7 +229,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
                 Long houseId = house.getId();
                 try {
                     house.setHouseAttachment(houseAttachmentCfMap.get(houseId).get());
-                    house.setLandlordName(sysUserCfMap.get(houseId).get().getName());
+                    // house.setLandlordName(sysUserCfMap.get(houseId).get().getName());
                 } catch (Exception e) {
                     log.info(XMDLogFormat.build().putTag("interfaceName","setExtraAttributes").message(e.getMessage()));
                     throw new RuntimeException(e);
@@ -284,8 +282,14 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         int limitNum = (pageNum - 1) * pageSize;
 
 
+        List<House> deletedHousesWithPage = null;
+        try {
+            deletedHousesWithPage = baseMapper.getDeletedHousesWithPage(userId, limitNum, pageSize,userIds);
+        } catch (Exception e) {
+            log.info(XMDLogFormat.build().putTag("interfaceName","getDeletedHousesWithPage").message(String.valueOf("查询已下架房源失败,userId:" + String.valueOf(userId))));
+            throw new BusinessException(String.valueOf(e));
+        }
 
-        List<House> deletedHousesWithPage = baseMapper.getDeletedHousesWithPage(userId, limitNum, pageSize,userIds);
         // 设置到page对象里面然后返回数据
         housePage.setTotal(totalCount);
         housePage.setSize(pageSize);
@@ -303,11 +307,13 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
     @Override
    public void exportHouses(HttpServletResponse response, Long userId) {
        // 1.先查询数据库中的账单件,然后将其转为BookVo类型的对象
-       List<HouseVo> houseVos = this.list(Wrappers.lambdaQuery(House.class).eq(House::getUserId,userId)).stream().map(book -> {
-           HouseVo bookVo = new HouseVo();
+       List<HouseVo> houseVos = this.list(Wrappers.lambdaQuery(House.class).eq(House::getUserId,userId)).stream().map(house -> {
+           HouseVo houseVo = new HouseVo();
            // 使用工具类,将查询出来的对象的属性转换为Dict类型的对象
-           BeanUtils.copyProperties(book, bookVo);
-           return bookVo;
+           BeanUtils.copyProperties(house, houseVo);
+           houseVo.setId(String.valueOf(house.getId()));
+           houseVo.setUserId(String.valueOf(house.getUserId()));
+           return houseVo;
        }).collect(Collectors.toList());
        // 在本地的时候,我们可以将数据的集合写入到一个excel文件中
        // 但是通过浏览器的下载,我们需要将数据集合写入到一个内存中的excel文件中再通过输出流写个浏览器

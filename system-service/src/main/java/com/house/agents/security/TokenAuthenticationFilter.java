@@ -2,6 +2,7 @@ package com.house.agents.security;
 
 import com.house.agents.entity.SysUser;
 import com.house.agents.utils.CookieUtils;
+import com.house.agents.utils.MutableHttpServletRequest;
 import com.house.agents.utils.Result;
 import com.house.agents.utils.ResultCodeEnum;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -19,6 +20,25 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.UUID;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebFilter;
+import javax.servlet.http.HttpFilter;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.catalina.connector.Request;
+import org.apache.catalina.connector.RequestFacade;
+import org.apache.tomcat.util.http.MimeHeaders;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.util.ReflectionUtils;
 
 /**
  * <p>
@@ -42,8 +62,12 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         logger.info("uri:"+request.getRequestURI());
+
+        // 转换request
+        // MutableHttpServletRequest request = new MutableHttpServletRequest(req);
+
         //如果是登录接口，直接放行
-        if("/admin/user/login".equals(request.getRequestURI()) || "/api/oss/upload/".equals(request.getRequestURI()) ) {
+        if("/admin/user/login".equals(request.getRequestURI()) /*|| "/api/oss/upload/".equals(request.getRequestURI())*/ ) {
             chain.doFilter(request, response);
             return;
         }
@@ -62,14 +86,46 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
+    private void modifyRequestHeader(HttpServletRequest req,String headerKey,String headerValue) {
+        try {
+            // 从 RequestFacade 中获取 org.apache.catalina.connector.Request
+            Field connectorField = ReflectionUtils.findField(RequestFacade.class, "request", Request.class);
+            connectorField.setAccessible(true);
+            Request connectorRequest = (Request) connectorField.get(req);
+
+            // 从 org.apache.catalina.connector.Request 中获取 org.apache.coyote.Request
+            Field coyoteField = ReflectionUtils.findField(Request.class, "coyoteRequest", org.apache.coyote.Request.class);
+            coyoteField.setAccessible(true);
+            org.apache.coyote.Request coyoteRequest = (org.apache.coyote.Request) coyoteField.get(connectorRequest);
+
+            // 从 org.apache.coyote.Request 中获取 MimeHeaders
+            Field mimeHeadersField =  ReflectionUtils.findField(org.apache.coyote.Request.class, "headers", MimeHeaders.class);
+            mimeHeadersField.setAccessible(true);
+            MimeHeaders mimeHeaders =  (MimeHeaders) mimeHeadersField.get(coyoteRequest);
+
+            this.mineHeadersHandle(mimeHeaders,headerKey,headerValue);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected void mineHeadersHandle (MimeHeaders mimeHeaders,String headerKey,String headerValue) {
+        // 添加一个Header，随机生成请求ID
+        mimeHeaders.addValue(headerKey).setString(headerValue);
+        // 移除一个header
+        // mimeHeaders.removeHeader("User-Agent");
+    }
+
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
         // 从请求头中获取token
         String token = request.getHeader("token");
 
         // 由于文件上传的请求没有经过前端的拦截器,所以请求头里面没有对应的token,所以这个时候尝试从cookie里面获取对应的token
-        // if (StringUtils.isEmpty(token)){
-        //     token = CookieUtils.getCookieValue(request, "vue_admin_template_token");
-        // }
+        if (StringUtils.isEmpty(token)){
+            token = CookieUtils.getCookieValue(request, "vue_admin_template_token");
+            // 如果是通过这种方式获取到的token,那么需要再手动的将token设置到request header里面
+            // modifyRequestHeader(request,"token",token);
+        }
 
         if (!StringUtils.isEmpty(token)) {
             //从redis中读取对应的sysUser信息

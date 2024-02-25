@@ -60,4 +60,11 @@ public class HouseAttachment {
     @TableLogic
     private Boolean deleted;
 
+    /**
+     * @see com.house.agents.Enum.FileContentTypeEnum
+     */
+    @ApiModelProperty(value = "附件类型")
+    @TableField("contentType")
+    private int contentType;
+
 }

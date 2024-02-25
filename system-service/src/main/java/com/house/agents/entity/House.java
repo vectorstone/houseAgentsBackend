@@ -85,6 +85,7 @@ public class House implements Serializable {
     private List<HouseAttachment> houseAttachment;
 
     @ApiModelProperty(value = "房子所属的房东的姓名")
-    @TableField(exist = false)
+    // @TableField(exist = false)
+    @TableField(value = "landlordName")
     private String landlordName;
 }

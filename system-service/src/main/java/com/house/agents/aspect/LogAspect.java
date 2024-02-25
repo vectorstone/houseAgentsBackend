@@ -1,6 +1,7 @@
 package com.house.agents.aspect;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Maps;
 import com.house.agents.annotation.LogAnnotation;
 import com.house.agents.commonConst.CommonConst;
@@ -12,6 +13,7 @@ import com.house.agents.utils.XMDLogFormat;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.protocol.HTTP;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.*;
@@ -28,10 +30,16 @@ import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +47,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @Description:
@@ -143,7 +152,20 @@ public class LogAspect {
             String url = request.getRequestURL().toString();
             // 获取用户请求的参数
             // String reqParam = preHandle(joinPoint,request);
-            String reqParam = JSON.toJSONString(t);
+            Map<String, String> paramMap = t.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, map -> {
+                Object param = map.getValue();
+                if (param instanceof HttpServletRequest) {
+                    return getRequestPostJson(param);
+                } else if (param instanceof MultipartFile){
+                    MultipartFile file = (MultipartFile) param;
+                    return file.getOriginalFilename() == null ? "file name is empty" : file.getOriginalFilename();
+                } else if (param instanceof HttpServletResponse) {
+                    return "response里面的结果不好获取到";
+                } else {
+                    return JSON.toJSONString(param);
+                }
+            }));
+            String reqParam = JSON.toJSONString(paramMap);
             HashMap<String, String> logTagMap = new HashMap<>();
             logTagMap.put("interfaceName", methodName);
             logTagMap.put("url", url);
@@ -178,6 +200,25 @@ public class LogAspect {
         return result;
     }
 
+    private String getRequestPostJson(Object req){
+        try {
+            HttpServletRequest request = (HttpServletRequest) req;
+            BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()));
+            String line = null;
+            StringBuilder sb = new StringBuilder();
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
+            String reqBody = URLDecoder.decode(sb.toString(), HTTP.UTF_8);
+            log.info("Request Body:" + reqBody);
+            log.info("[getRequestPostJson get request body with json success]");
+            return reqBody;
+        } catch (Exception e) {
+            log.info("[getRequestPostJson get request body with json fail.Exception message: " + e.getMessage() + "]");
+            return "";
+        }
+    }
+
     /**
      * 返回的map里面 key 是参数名称 value 是参数值
      * @param joinPoint
@@ -194,15 +235,17 @@ public class LogAspect {
         Class<?>[] classes = new Class[args.length];
         for (int k = 0; k < args.length; k++) {
             // 不管是封装类型还是基础类型的,我都要
-            String result = args[k].getClass().getName();
-            Class s = map.get(result);
-            classes[k] = s == null ? args[k].getClass() : s;
-            // if (!args[k].getClass().isPrimitive()) {
-            //     // 获取的是封装类型而不是基础类型
-            //     String result = args[k].getClass().getName();
-            //     Class s = map.get(result);
-            //     classes[k] = s == null ? args[k].getClass() : s;
-            // }
+            if (args[k] != null) {
+                String result = args[k].getClass().getName();
+                Class s = map.get(result);
+                classes[k] = s == null ? args[k].getClass() : s;
+                // if (!args[k].getClass().isPrimitive()) {
+                //     // 获取的是封装类型而不是基础类型
+                //     String result = args[k].getClass().getName();
+                //     Class s = map.get(result);
+                //     classes[k] = s == null ? args[k].getClass() : s;
+                // }
+            }
         }
         ParameterNameDiscoverer pnd = new DefaultParameterNameDiscoverer();
         // 获取指定的方法，第二个参数可以不传，但是为了防止有重载的现象，还是需要传入参数的类型
@@ -227,6 +270,7 @@ public class LogAspect {
             put("java.lang.Short", short.class);
             put("java.lang.Boolean", boolean.class);
             put("java.lang.Char", char.class);
+            put("java.lang.String",String.class);
         }
     };
 

@@ -1,6 +1,7 @@
 package com.house.agents.controller;
 
 
+import com.alibaba.excel.util.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Event;
@@ -14,6 +15,7 @@ import com.house.agents.service.HouseService;
 import com.house.agents.service.SubwayService;
 import com.house.agents.utils.Asserts;
 import com.house.agents.utils.BusinessException;
+import com.house.agents.utils.CookieUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Optional;
@@ -79,9 +82,12 @@ public class HouseController {
     @ApiOperation("待出租房excel表格的上传功能")
     @PostMapping("/import")
     @LogAnnotation
-    public R importHouse(@RequestParam("file") MultipartFile file, @RequestHeader("token") String token) {
+    public R importHouse(HttpServletRequest request,@RequestParam("file") MultipartFile file, @RequestHeader(required = false, name = "token") String token) {
         // excel也是只能上传自己的账单数据,不能上传别人的数据
         // Cat.logEvent("importHouse","importHouse");
+        if (StringUtils.isBlank(token)) {
+            token = CookieUtils.getCookieValue(request, "vue_admin_template_token");
+        }
         SysUser sysUser = validUser(token);
         Long userId = sysUser.getId();
         houseService.importHouses(file, userId);
@@ -152,8 +158,11 @@ public class HouseController {
     @GetMapping("/export")
     @LogAnnotation
     // 这个地方不能有返回值,否则会覆盖服务器给前端的response响应
-    public void download(HttpServletResponse response, @RequestHeader(required = true, name = "token") String token) {
+    public void download(HttpServletRequest request, HttpServletResponse response, @RequestHeader(required = false, name = "token") String token) {
         // Cat.logEvent("download","download");
+        if (StringUtils.isBlank(token)) {
+            token = CookieUtils.getCookieValue(request, "vue_admin_template_token");
+        }
         SysUser sysUser = validUser(token);
         Long userId = sysUser.getId();
 

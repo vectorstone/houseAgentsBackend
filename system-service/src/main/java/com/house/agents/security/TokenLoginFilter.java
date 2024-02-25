@@ -79,7 +79,8 @@ public class TokenLoginFilter extends UsernamePasswordAuthenticationFilter {
         //2.将用户信息保存到redis中，有效时长2小时
         String token = UUID.randomUUID().toString().replaceAll("-", "");
         SysUser sysUser = customUser.getSysUser();
-        redisTemplate.boundValueOps(token).set(sysUser,2, TimeUnit.HOURS);
+        // token的过期的时间设置为24个小时,不然2个小时就过期了,需要频繁的登录,使用的体验太差了
+        redisTemplate.boundValueOps(token).set(sysUser,24, TimeUnit.HOURS);
         //230913 这里不能使用jwt实现无状态登录的,必须要借助与Redis,因为,sysUser里面有一个字段里面封装的是用户的权限信息的集合
         // ,而jwt类型的token里面只有userId和userName,信息不够的全面(其实要想做的话,也不是不可以,只是载荷会非常的大
         //这里使用jwt的方式来生成token

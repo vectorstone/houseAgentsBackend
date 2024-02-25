@@ -69,4 +69,7 @@ public class HouseSearchVo {
 
     @ApiModelProperty(value = "房子所属的房东的姓名")
     private String landlordName;
+
+    @ApiModelProperty(value = "房子的id")
+    private String id;
 }

@@ -9,6 +9,7 @@ import com.aliyun.oss.model.PutObjectRequest;
 import com.aliyun.oss.model.PutObjectResult;
 import com.aliyuncs.exceptions.ClientException;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.house.agents.Enum.FileContentTypeEnum;
 import com.house.agents.config.OssProperties;
 import com.house.agents.entity.House;
 import com.house.agents.entity.HouseAttachment;
@@ -22,6 +23,7 @@ import com.house.agents.utils.BusinessException;
 import com.house.agents.utils.CookieUtils;
 import com.house.agents.utils.ResultCodeEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,6 +112,18 @@ public class OssServiceImpl implements OssService {
             houseAttachment.setImageName(originalFilename);
             houseAttachment.setUrl(path);
             houseAttachment.setDescription(description);
+            // 获取上传的文件的类型,用来做标识
+            // video/mp4 file.getContentType()
+            // image/png
+            String contentType = file.getContentType();
+            if (StringUtils.contains(contentType,"video")){
+                houseAttachment.setContentType(FileContentTypeEnum.HOUSE_VIDEO.getCode());
+            } else if (StringUtils.contains(contentType,"image")){
+                houseAttachment.setContentType(FileContentTypeEnum.HOUSE_IMAGE.getCode());
+            } else {
+                houseAttachment.setContentType(FileContentTypeEnum.HOUSE_OTHER.getCode());
+            }
+
             houseAttachmentService.save(houseAttachment);
             // SysImages sysImages = new SysImages();
             // sysImages.setImageName(houseId);
