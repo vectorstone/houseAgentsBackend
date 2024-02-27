@@ -80,6 +80,10 @@ public class House implements Serializable {
     @TableLogic
     private Boolean deleted;
 
+    @ApiModelProperty(value = "房子状态")
+    @TableField(value = "houseStatus")
+    private int houseStatus;
+
     @ApiModelProperty(value = "房子所属的附件url集合")
     @TableField(exist = false)
     private List<HouseAttachment> houseAttachment;

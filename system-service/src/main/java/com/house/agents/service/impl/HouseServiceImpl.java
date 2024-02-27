@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.house.agents.entity.House;
 import com.house.agents.entity.HouseAttachment;
@@ -24,7 +25,6 @@ import com.house.agents.utils.BusinessException;
 import com.house.agents.utils.XMDLogFormat;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.ibatis.annotations.Param;
@@ -38,6 +38,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -254,7 +255,8 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         if (isAdmin(sysUser)){
             userId = 0L;
             // 只有是管理员的情况下,才能根据房东的姓名进行筛选对应的房源信息,普通的用户只能查看到自己的房源数据,无法筛选其他人的数据
-            String landlordName = houserSearchVo.getLandlordName();
+            String landlordName = Optional.ofNullable(houserSearchVo).map(HouseSearchVo::getLandlordName).orElse("");
+            // String landlordName = houserSearchVo.getLandlordName();
             if (StringUtils.isNotEmpty(landlordName)){
                 List<SysUser> landlords = sysUserService.list(Wrappers.lambdaQuery(SysUser.class).like(SysUser::getName, landlordName));
                 userIds = Optional.ofNullable(landlords).orElse(Lists.newArrayList()).stream().map(SysUser::getId).collect(Collectors.toList());
@@ -307,6 +309,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
     @Override
    public void exportHouses(HttpServletResponse response, Long userId) {
        // 1.先查询数据库中的账单件,然后将其转为BookVo类型的对象
+        // 下面这个方法获取到的house的isDeleted为0,并不是所有的数据,还需要查询出所有的数据
        List<HouseVo> houseVos = this.list(Wrappers.lambdaQuery(House.class).eq(House::getUserId,userId)).stream().map(house -> {
            HouseVo houseVo = new HouseVo();
            // 使用工具类,将查询出来的对象的属性转换为Dict类型的对象
@@ -315,7 +318,19 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
            houseVo.setUserId(String.valueOf(house.getUserId()));
            return houseVo;
        }).collect(Collectors.toList());
-       // 在本地的时候,我们可以将数据的集合写入到一个excel文件中
+
+       // 查询所有下架的房子,然后添加到house的集合里面
+       //  SysUser sysUser = sysUserService.getById(userId);
+       //  int pageNum = 1;
+       //  List<Page> pageList = Lists.newArrayList();
+       //  while (true) {
+       //
+       //      Page deletedPageList = this.getDeletedPageList(pageNum, 30, null, sysUser);
+       //      pageList.add(deletedPageList);
+       //      pageNum ++;
+       //  }
+
+        // 在本地的时候,我们可以将数据的集合写入到一个excel文件中
        // 但是通过浏览器的下载,我们需要将数据集合写入到一个内存中的excel文件中再通过输出流写个浏览器
 
        try {

@@ -2,10 +2,12 @@ package com.house.agents.controller;
 
 
 import com.alibaba.excel.util.StringUtils;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dianping.cat.Cat;
 import com.dianping.cat.message.Event;
 import com.dianping.cat.message.Transaction;
+import com.house.agents.Enum.HouseStatusEnum;
 import com.house.agents.annotation.LogAnnotation;
 import com.house.agents.entity.*;
 import com.house.agents.entity.vo.HouseSearchVo;
@@ -64,17 +66,17 @@ public class HouseController {
         Long userId = sysUser.getId();
         House house = houseService.getById(houseId);
         // Cat.logEvent("getHouseInfo","getHouseInfo");
-        if ((house == null || house.getUserId() != userId) && !isAdmin(sysUser)){
+        if ((house == null || house.getUserId() != userId) && !isAdmin(sysUser)) {
             // 进来这里面就不返回对应的数据
             return R.ok();
         }
-        return R.ok().data("item",house);
+        return R.ok().data("item", house);
     }
 
     private SysUser validUser(String token) {
         // Cat.logEvent("validUser","validUser");
         SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
-        Asserts.AssertNotNull(sysUser,ResponseEnum.ARGUMENT_VALID_ERROR);
+        Asserts.AssertNotNull(sysUser, ResponseEnum.ARGUMENT_VALID_ERROR);
         return sysUser;
     }
 
@@ -82,7 +84,7 @@ public class HouseController {
     @ApiOperation("待出租房excel表格的上传功能")
     @PostMapping("/import")
     @LogAnnotation
-    public R importHouse(HttpServletRequest request,@RequestParam("file") MultipartFile file, @RequestHeader(required = false, name = "token") String token) {
+    public R importHouse(HttpServletRequest request, @RequestParam("file") MultipartFile file, @RequestHeader(required = false, name = "token") String token) {
         // excel也是只能上传自己的账单数据,不能上传别人的数据
         // Cat.logEvent("importHouse","importHouse");
         if (StringUtils.isBlank(token)) {
@@ -190,9 +192,9 @@ public class HouseController {
     private boolean isAdmin(SysUser sysUser) {
         // Cat.logEvent("isAdmin","isAdmin");
         List<SysRole> roleList = sysUser.getRoleList();
-        if (CollectionUtils.isEmpty(roleList)){
+        if (CollectionUtils.isEmpty(roleList)) {
             // 如果roleList为空的话,那么说明是有问题的,需要抛出一场
-            log.info(String.format("interfaceName = %s , methodName = %s , parameter = userId : %s","HouseServiceImpl","getPageList", sysUser.getId()));
+            log.info(String.format("interfaceName = %s , methodName = %s , parameter = userId : %s", "HouseServiceImpl", "getPageList", sysUser.getId()));
             throw new BusinessException("roleList为空");
         }
         return roleList.stream().map(SysRole::getRoleCode).anyMatch(roleCode -> roleCode.equals("SYSTEM"));
@@ -243,6 +245,7 @@ public class HouseController {
         houseService.save(house);
         return R.ok();
     }
+
     @PreAuthorize("hasAnyAuthority('bnt.house.remove')")
     @ApiOperation("批量删除")
     @DeleteMapping()
@@ -259,7 +262,8 @@ public class HouseController {
         if (!checkUser && !isAdmin(sysUser)) {
             throw new BusinessException(ResponseEnum.NOT_YOUSELF_ACCOUNT);
         }
-        houseService.removeByIds(houseIds);
+        // houseService.removeByIds(houseIds);
+        houseService.update(Wrappers.lambdaUpdate(House.class).in(House::getId, houseIds).set(House::getHouseStatus, HouseStatusEnum.HOUSE_DOWN.getCode()));
         return R.ok();
     }
 
@@ -267,7 +271,7 @@ public class HouseController {
     @ApiOperation("批量重新上架")
     @PutMapping("/batch/republish")
     @LogAnnotation
-    public R batchRepublishByIds(@RequestBody List<String> houseIds, @RequestHeader("token") String token){
+    public R batchRepublishByIds(@RequestBody List<String> houseIds, @RequestHeader("token") String token) {
         // Cat.logEvent("batchRepublishByIds","batchRepublishByIds");
         SysUser sysUser = validUser(token);
         Long userId = sysUser.getId();
@@ -279,7 +283,8 @@ public class HouseController {
         if (!checkUser && !isAdmin(sysUser)) {
             throw new BusinessException(ResponseEnum.NOT_YOUSELF_ACCOUNT);
         }
-        houseService.rePublishByIds(houseIds);
+        // houseService.rePublishByIds(houseIds);
+        houseService.update(Wrappers.lambdaUpdate(House.class).in(House::getId, houseIds).set(House::getHouseStatus, HouseStatusEnum.HOUSE_UP.getCode()));
         return R.ok();
     }
 
@@ -288,10 +293,10 @@ public class HouseController {
     @ApiOperation(value = "获取地铁线路信息")
     @GetMapping("/subway")
     @LogAnnotation
-    public R getSubway(){
+    public R getSubway() {
         // Cat.logEvent("getSubway","getSubway");
         List<Subway> list = subwayService.list();
-        return R.ok().data("items",list);
+        return R.ok().data("items", list);
     }
 }
 
