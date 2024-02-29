@@ -83,6 +83,7 @@ public enum ResponseEnum {
     ILLEGAL_REQUEST(2050, "非法请求"),
     REPEAT_SUBMIT(2060, "重复提交"),
     ARGUMENT_VALID_ERROR(2100, "参数校验异常"),
+    PASSWORD_EMPTY(2101, "参数校验异常"),
     LOGIN_AUTH(2080, "未登陆"),
     PERMISSION(2090, "没有权限"),
     ACCOUNT_ERROR(2140, "账号不正确"),

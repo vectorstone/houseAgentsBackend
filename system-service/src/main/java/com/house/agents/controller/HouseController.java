@@ -15,6 +15,7 @@ import com.house.agents.result.R;
 import com.house.agents.result.ResponseEnum;
 import com.house.agents.service.HouseService;
 import com.house.agents.service.SubwayService;
+import com.house.agents.service.SysUserService;
 import com.house.agents.utils.Asserts;
 import com.house.agents.utils.BusinessException;
 import com.house.agents.utils.CookieUtils;
@@ -56,6 +57,9 @@ public class HouseController {
     @Autowired
     private SubwayService subwayService;
 
+    @Autowired
+    private SysUserService sysUserService;
+
     @PreAuthorize("hasAnyAuthority('bnt.house.list')")
     @ApiOperation("获取房子的详细的情况")
     @PostMapping("/{houseId}")
@@ -71,6 +75,25 @@ public class HouseController {
             return R.ok();
         }
         return R.ok().data("item", house);
+    }
+
+    @PreAuthorize("hasAnyAuthority('bnt.house.password')")
+    @ApiOperation("修改自己的密码")
+    @PostMapping("/modifyPassword")
+    @LogAnnotation
+    public R modifyPassword(@RequestBody MyPassword myPassword ,@RequestHeader("token") String token) {
+        // excel也是只能上传自己的账单数据,不能上传别人的数据
+        SysUser sysUser = validUser(token);
+        Long userId = sysUser.getId();
+        // House house = houseService.getById(houseId);
+        // Cat.logEvent("getHouseInfo","getHouseInfo");
+        // if ((house == null || house.getUserId() != userId) && !isAdmin(sysUser)) {
+        //     // 进来这里面就不返回对应的数据
+        //     return R.ok();
+        // }
+        Asserts.AssertNotNull(myPassword, ResponseEnum.PASSWORD_EMPTY);
+        sysUserService.modifyPassword(sysUser,myPassword);
+        return R.ok();
     }
 
     private SysUser validUser(String token) {
@@ -185,7 +208,8 @@ public class HouseController {
         if (house.getUserId() != userId && !isAdmin(sysUser)) {
             throw new BusinessException(ResponseEnum.NOT_YOUSELF_ACCOUNT);
         }
-        houseService.removeById(id);
+        // houseService.removeById(id);
+        houseService.update(Wrappers.lambdaUpdate(House.class).in(House::getId, id).set(House::getHouseStatus, HouseStatusEnum.HOUSE_DOWN.getCode()));
         return R.ok();
     }
 

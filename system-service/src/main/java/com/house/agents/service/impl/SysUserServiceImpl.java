@@ -1,9 +1,6 @@
 package com.house.agents.service.impl;
 
-import com.house.agents.entity.SysMenu;
-import com.house.agents.entity.SysRole;
-import com.house.agents.entity.SysUser;
-import com.house.agents.entity.SysUserRole;
+import com.house.agents.entity.*;
 import com.house.agents.entity.vo.RouterVo;
 import com.house.agents.entity.vo.UserVo;
 import com.house.agents.mapper.SysMenuMapper;
@@ -14,6 +11,7 @@ import com.house.agents.result.ResponseEnum;
 import com.house.agents.service.SysUserService;
 
 import com.house.agents.utils.Asserts;
+import com.house.agents.utils.BusinessException;
 import com.house.agents.utils.MenuHelper;
 import com.house.agents.utils.RouterHelper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -247,5 +245,20 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public List<SysRole> getUserRoleListByUserId(Long userId) {
         return sysRoleMapper.getUserRoleListByUserId(userId);
+    }
+
+    @Override
+    public void modifyPassword(SysUser sysUser, MyPassword myPassword) {
+        try {
+            String password = passwordEncoder.encode(sysUser.getPassword());
+            String oldPassword = passwordEncoder.encode(myPassword.getOldPassword());
+            String newPassword = passwordEncoder.encode(myPassword.getNewPssword());
+            if (!StringUtils.equals(password,oldPassword)) {
+                throw new BusinessException(ResponseEnum.PASSWORD_ERROR);
+            }
+            this.update(Wrappers.lambdaUpdate(SysUser.class).eq(SysUser::getId,sysUser.getId()).set(SysUser::getPassword,newPassword));
+        } catch (BusinessException e) {
+            throw new BusinessException("密码修改失败!");
+        }
     }
 }

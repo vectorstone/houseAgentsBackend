@@ -1,5 +1,6 @@
 package com.house.agents.service;
 
+import com.house.agents.entity.MyPassword;
 import com.house.agents.entity.SysRole;
 import com.house.agents.entity.SysUser;
 
@@ -39,4 +40,6 @@ public interface SysUserService extends IService<SysUser> {
     void addUser(SysUser sysUser);
 
     List<SysRole> getUserRoleListByUserId(Long userId);
+
+    void modifyPassword(SysUser sysUser, MyPassword myPassword);
 }
