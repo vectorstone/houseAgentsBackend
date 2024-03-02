@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -248,17 +247,16 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
-    public void modifyPassword(SysUser sysUser, MyPassword myPassword) {
-        try {
-            String password = passwordEncoder.encode(sysUser.getPassword());
-            String oldPassword = passwordEncoder.encode(myPassword.getOldPassword());
-            String newPassword = passwordEncoder.encode(myPassword.getNewPssword());
-            if (!StringUtils.equals(password,oldPassword)) {
-                throw new BusinessException(ResponseEnum.PASSWORD_ERROR);
-            }
-            this.update(Wrappers.lambdaUpdate(SysUser.class).eq(SysUser::getId,sysUser.getId()).set(SysUser::getPassword,newPassword));
-        } catch (BusinessException e) {
-            throw new BusinessException("密码修改失败!");
+    public void modifyPassword(Long userId, MyPasswordVo myPassword,String token) {
+        String password = this.getOne(Wrappers.lambdaQuery(SysUser.class).eq(SysUser::getId,userId)).getPassword();
+        // String oldPassword = passwordEncoder.encode(myPassword.getOldPassword());
+        boolean matches = passwordEncoder.matches(myPassword.getOldPassword(), password);
+        String newPassword = passwordEncoder.encode(myPassword.getNewPassword());
+        if (!matches) {
+            throw new BusinessException(ResponseEnum.PASSWORD_ERROR);
         }
+        this.update(Wrappers.lambdaUpdate(SysUser.class).eq(SysUser::getId,userId).set(SysUser::getPassword,newPassword));
+        // 密码修改完成后清除token,让用户重新登录
+        // redisTemplate.delete(token);
     }
 }

@@ -12,7 +12,4 @@ import com.house.agents.entity.Subway;
  * @since 2023-07-30
  */
 public interface SubwayService extends IService<Subway> {
-
-
-
 }

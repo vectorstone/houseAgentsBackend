@@ -87,9 +87,10 @@ public enum ResponseEnum {
     LOGIN_AUTH(2080, "未登陆"),
     PERMISSION(2090, "没有权限"),
     ACCOUNT_ERROR(2140, "账号不正确"),
-    PASSWORD_ERROR(2150, "密码不正确"),
+    PASSWORD_ERROR(2150, "旧密码不正确"),
     LOGIN_MOBLE_ERROR(2160, "账号不正确"),
     ACCOUNT_STOP(2170, "账号已停用"),
+    SHARE_ERROR(2171, "分享房源为空"),
     NODE_ERROR(2180, "该节点下有子节点，不可以删除");
     //=======================
 

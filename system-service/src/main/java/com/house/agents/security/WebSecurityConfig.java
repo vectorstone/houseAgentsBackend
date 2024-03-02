@@ -33,6 +33,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
                 .authorizeRequests()
                 //指定某些接口不需要通过验证即可访问,登录接口不需要认证
                 .antMatchers("/admin/user/login").permitAll()
+                .antMatchers("/admin/house/shareHouse").permitAll()
                 //测试放行swagger的请求
                 .antMatchers("/doc.html").permitAll()
                 .antMatchers("/favicon.ico").permitAll()

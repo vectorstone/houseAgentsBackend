@@ -9,8 +9,9 @@ import java.io.Serializable;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @ApiModel(value="MyPassword", description="修改密码的对象")
-public class MyPassword implements Serializable {
+public class MyPasswordVo implements Serializable {
     private static final long serialVersionUID = 1L;
     private String oldPassword;
-    private String newPssword;
+    private String newPassword;
+    private String confirmPassword;
 }

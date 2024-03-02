@@ -4,9 +4,6 @@ package com.house.agents.controller;
 import com.alibaba.excel.util.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.dianping.cat.Cat;
-import com.dianping.cat.message.Event;
-import com.dianping.cat.message.Transaction;
 import com.house.agents.Enum.HouseStatusEnum;
 import com.house.agents.annotation.LogAnnotation;
 import com.house.agents.entity.*;
@@ -14,6 +11,7 @@ import com.house.agents.entity.vo.HouseSearchVo;
 import com.house.agents.result.R;
 import com.house.agents.result.ResponseEnum;
 import com.house.agents.service.HouseService;
+import com.house.agents.service.ShareEntityService;
 import com.house.agents.service.SubwayService;
 import com.house.agents.service.SysUserService;
 import com.house.agents.utils.Asserts;
@@ -33,7 +31,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * <p>
@@ -60,6 +57,9 @@ public class HouseController {
     @Autowired
     private SysUserService sysUserService;
 
+    @Autowired
+    private ShareEntityService shareEntityService;
+
     @PreAuthorize("hasAnyAuthority('bnt.house.list')")
     @ApiOperation("获取房子的详细的情况")
     @PostMapping("/{houseId}")
@@ -81,7 +81,7 @@ public class HouseController {
     @ApiOperation("修改自己的密码")
     @PostMapping("/modifyPassword")
     @LogAnnotation
-    public R modifyPassword(@RequestBody MyPassword myPassword ,@RequestHeader("token") String token) {
+    public R modifyPassword(@RequestBody MyPasswordVo myPasswordVo , @RequestHeader("token") String token) {
         // excel也是只能上传自己的账单数据,不能上传别人的数据
         SysUser sysUser = validUser(token);
         Long userId = sysUser.getId();
@@ -91,8 +91,8 @@ public class HouseController {
         //     // 进来这里面就不返回对应的数据
         //     return R.ok();
         // }
-        Asserts.AssertNotNull(myPassword, ResponseEnum.PASSWORD_EMPTY);
-        sysUserService.modifyPassword(sysUser,myPassword);
+        Asserts.AssertNotNull(myPasswordVo, ResponseEnum.PASSWORD_EMPTY);
+        sysUserService.modifyPassword(userId,myPasswordVo,token);
         return R.ok();
     }
 
@@ -289,6 +289,31 @@ public class HouseController {
         // houseService.removeByIds(houseIds);
         houseService.update(Wrappers.lambdaUpdate(House.class).in(House::getId, houseIds).set(House::getHouseStatus, HouseStatusEnum.HOUSE_DOWN.getCode()));
         return R.ok();
+    }
+
+    // @PreAuthorize("hasAnyAuthority('bnt.house.share')")
+    @ApiOperation("批量查询分享的房子")
+    @GetMapping("/shareHouse")
+    @LogAnnotation
+    public R batchGetShareHousesByShareId(@RequestParam("shareId") String shareId) {
+        List<House> houses = shareEntityService.batchGetHousesByShareId(shareId);
+        return R.ok().data("houses",houses);
+    }
+
+    @PreAuthorize("hasAnyAuthority('bnt.house.share')")
+    @ApiOperation("批量分享")
+    @PostMapping("/share")
+    @LogAnnotation
+    public R batchShareByIds(@RequestBody List<String> houseIds, @RequestHeader("token") String token) {
+        // Cat.logEvent("batchRemoveByIds","batchRemoveByIds");
+        if (CollectionUtils.isEmpty(houseIds)) {
+            throw new BusinessException(ResponseEnum.SHARE_ERROR);
+        }
+        SysUser sysUser = validUser(token);
+        Long userId = sysUser.getId();
+
+        String shareId = shareEntityService.batchShareByIds(houseIds,userId);
+        return R.ok().data("shareId",shareId);
     }
 
     @PreAuthorize("hasAnyAuthority('bnt.house.update')")

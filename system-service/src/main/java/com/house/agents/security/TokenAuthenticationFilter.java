@@ -61,13 +61,14 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        logger.info("uri:"+request.getRequestURI());
+        String requestURI = request.getRequestURI();
+        logger.info("uri:"+ requestURI);
 
         // 转换request
         // MutableHttpServletRequest request = new MutableHttpServletRequest(req);
 
-        //如果是登录接口，直接放行
-        if("/admin/user/login".equals(request.getRequestURI()) /*|| "/api/oss/upload/".equals(request.getRequestURI())*/ ) {
+        //如果是登录的接口或者是批量分享房源的接口，直接放行
+        if("/admin/user/login".equals(requestURI) || "/admin/house/shareHouse".equals(requestURI)/*|| "/api/oss/upload/".equals(request.getRequestURI())*/ ) {
             chain.doFilter(request, response);
             return;
         }

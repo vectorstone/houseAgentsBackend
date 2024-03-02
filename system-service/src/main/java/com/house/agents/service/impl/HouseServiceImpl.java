@@ -58,6 +58,10 @@ import java.util.stream.Collectors;
 public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements HouseService {
     @Autowired
     private HouseAttachmentService houseAttachmentService;
+
+    @Autowired
+    private ExecutorService executorService;
+
     @Autowired
     private HouseMapper houseMapper;
 
@@ -193,8 +197,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         // 只要当前该用户拥有的角色列表里面有任何一个角色的roleCode和SYSTEM相等,说明该用户具有管理员的权限,那么就默认查询所有的数据
         return roleList.stream().map(SysRole::getRoleCode).anyMatch(roleCode -> roleCode.equals("SYSTEM"));
     }
-    @Autowired
-    private ExecutorService executorService;
+
 
     /**
      * 该方法用来设置house额外的附件的信息以及房东姓名的属性
@@ -204,39 +207,44 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         if (housePageData != null && CollectionUtils.isNotEmpty(housePageData.getRecords())) {
             // 如果查询出来的结果不为空的话,那么就设置对应的房子的附件进去
             List<House> houses = housePageData.getRecords();
-            HashMap<Long, CompletableFuture<List<HouseAttachment>>> houseAttachmentCfMap = Maps.newHashMap();
-            // HashMap<Long, CompletableFuture<SysUser>> sysUserCfMap = Maps.newHashMap();
-            houses.forEach(house -> {
-                try {
-                // 查询房子所属的附件并设置进去
-                CompletableFuture<List<HouseAttachment>> houseAttachmentCf = CompletableFuture.supplyAsync(() -> houseAttachmentService.list(
-                        Wrappers.lambdaQuery(HouseAttachment.class).eq(HouseAttachment::getHouseId, house.getId())), executorService);
-
-                // 查询房子所属的房东并设置进去
-                // CompletableFuture<SysUser> sysUserCf = CompletableFuture.supplyAsync(() -> sysUserService.getById(house.getUserId()), executorService);
-
-                houseAttachmentCfMap.put(house.getId(),houseAttachmentCf);
-                // sysUserCfMap.put(house.getId(),sysUserCf);
-
-                // house.setHouseAttachment(houseAttachmentCf.get());
-                // house.setLandlordName(sysUserCf.get().getName());
-                } catch (Exception e) {
-                    log.info(XMDLogFormat.build().putTag("interfaceName","setExtraAttributes").message(e.getMessage()));
-                    throw new RuntimeException(e);
-                }
-            });
-
-            houses.forEach(house -> {
-                Long houseId = house.getId();
-                try {
-                    house.setHouseAttachment(houseAttachmentCfMap.get(houseId).get());
-                    // house.setLandlordName(sysUserCfMap.get(houseId).get().getName());
-                } catch (Exception e) {
-                    log.info(XMDLogFormat.build().putTag("interfaceName","setExtraAttributes").message(e.getMessage()));
-                    throw new RuntimeException(e);
-                }
-            });
+            setHouseAttachment(houses);
         }
+    }
+
+    @Override
+    public void setHouseAttachment(List<House> houses) {
+        HashMap<Long, CompletableFuture<List<HouseAttachment>>> houseAttachmentCfMap = Maps.newHashMap();
+        // HashMap<Long, CompletableFuture<SysUser>> sysUserCfMap = Maps.newHashMap();
+        houses.forEach(house -> {
+            try {
+            // 查询房子所属的附件并设置进去
+            CompletableFuture<List<HouseAttachment>> houseAttachmentCf = CompletableFuture.supplyAsync(() -> houseAttachmentService.list(
+                    Wrappers.lambdaQuery(HouseAttachment.class).eq(HouseAttachment::getHouseId, house.getId())), executorService);
+
+            // 查询房子所属的房东并设置进去
+            // CompletableFuture<SysUser> sysUserCf = CompletableFuture.supplyAsync(() -> sysUserService.getById(house.getUserId()), executorService);
+
+            houseAttachmentCfMap.put(house.getId(),houseAttachmentCf);
+            // sysUserCfMap.put(house.getId(),sysUserCf);
+
+            // house.setHouseAttachment(houseAttachmentCf.get());
+            // house.setLandlordName(sysUserCf.get().getName());
+            } catch (Exception e) {
+                log.info(XMDLogFormat.build().putTag("interfaceName","setExtraAttributes").message(e.getMessage()));
+                throw new RuntimeException(e);
+            }
+        });
+
+        houses.forEach(house -> {
+            Long houseId = house.getId();
+            try {
+                house.setHouseAttachment(houseAttachmentCfMap.get(houseId).get());
+                // house.setLandlordName(sysUserCfMap.get(houseId).get().getName());
+            } catch (Exception e) {
+                log.info(XMDLogFormat.build().putTag("interfaceName","setExtraAttributes").message(e.getMessage()));
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     /**
