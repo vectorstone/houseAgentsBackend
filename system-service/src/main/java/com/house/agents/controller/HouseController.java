@@ -2,6 +2,7 @@ package com.house.agents.controller;
 
 
 import com.alibaba.excel.util.StringUtils;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.house.agents.Enum.HouseStatusEnum;
@@ -158,6 +159,7 @@ public class HouseController {
         return R.ok().data("items", page);
     }
 
+    @Deprecated
     @PreAuthorize("hasAnyAuthority('bnt.house.list')")
     @ApiOperation("分页查询已经下架了的房子信息")
     @PostMapping("/deleted/{pageNum}/{pageSize}")
@@ -195,7 +197,7 @@ public class HouseController {
     }
 
     @PreAuthorize("hasAnyAuthority('bnt.house.remove')")
-    @ApiOperation("根据id删除房子")
+    @ApiOperation("根据id下架或者上架房子")
     @DeleteMapping("/{id}")
     @LogAnnotation
     public R removeById(@PathVariable("id") String id, @RequestHeader("token") String token) {
@@ -209,7 +211,15 @@ public class HouseController {
             throw new BusinessException(ResponseEnum.NOT_YOUSELF_ACCOUNT);
         }
         // houseService.removeById(id);
-        houseService.update(Wrappers.lambdaUpdate(House.class).in(House::getId, id).set(House::getHouseStatus, HouseStatusEnum.HOUSE_DOWN.getCode()));
+        LambdaUpdateWrapper<House> updateWrapper = Wrappers.lambdaUpdate(House.class).eq(House::getId, id);
+        if (house.getHouseStatus() == HouseStatusEnum.HOUSE_DOWN.getCode()) {
+            // 如果房子是下架状态则修改为上架
+            updateWrapper.set(House::getHouseStatus, HouseStatusEnum.HOUSE_UP.getCode());
+        } else {
+            // 如果房子是上架状态则修改为下架
+            updateWrapper.set(House::getHouseStatus, HouseStatusEnum.HOUSE_DOWN.getCode());
+        }
+        houseService.update(updateWrapper);
         return R.ok();
     }
 
@@ -224,6 +234,7 @@ public class HouseController {
         return roleList.stream().map(SysRole::getRoleCode).anyMatch(roleCode -> roleCode.equals("SYSTEM"));
     }
 
+    @Deprecated
     @PreAuthorize("hasAnyAuthority('bnt.house.update')")
     @ApiOperation("重新上架房子")
     @PutMapping("/{houseId}")
@@ -270,6 +281,7 @@ public class HouseController {
         return R.ok();
     }
 
+    @Deprecated
     @PreAuthorize("hasAnyAuthority('bnt.house.remove')")
     @ApiOperation("批量删除")
     @DeleteMapping()
@@ -316,6 +328,7 @@ public class HouseController {
         return R.ok().data("shareId",shareId);
     }
 
+    @Deprecated
     @PreAuthorize("hasAnyAuthority('bnt.house.update')")
     @ApiOperation("批量重新上架")
     @PutMapping("/batch/republish")
@@ -338,6 +351,7 @@ public class HouseController {
     }
 
 
+    @Deprecated
     @PreAuthorize("hasAnyAuthority('bnt.house.list')")
     @ApiOperation(value = "获取地铁线路信息")
     @GetMapping("/subway")

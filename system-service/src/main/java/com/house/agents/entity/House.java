@@ -80,6 +80,9 @@ public class House implements Serializable {
     @TableLogic
     private Boolean deleted;
 
+    /**
+     * @see com.house.agents.Enum.HouseStatusEnum
+     */
     @ApiModelProperty(value = "房子状态")
     @TableField(value = "houseStatus")
     private int houseStatus;

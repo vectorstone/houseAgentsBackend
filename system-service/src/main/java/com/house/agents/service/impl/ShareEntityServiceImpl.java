@@ -71,6 +71,7 @@ public class ShareEntityServiceImpl extends ServiceImpl<ShareEntityMapper, Share
         houses.forEach(house -> {
             // 隐藏敏感信息
             house.setKeyOrPassword("");
+            house.setRemark("");
         });
         return houses;
     }
