@@ -1,17 +1,13 @@
 package com.house.agents.entity.vo;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.house.agents.Enum.FileContentTypeEnum;
+import com.house.agents.Enum.SearchFileTypeEnum;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.initialization.qual.Initialized;
-import org.springframework.beans.factory.InitializingBean;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -72,4 +68,11 @@ public class HouseSearchVo {
 
     @ApiModelProperty(value = "房子的id")
     private String id;
+
+    /**
+     * @see SearchFileTypeEnum
+     * 查询的时候需要查询的附件的类型
+     */
+    @ApiModelProperty(value = "附件的类型")
+    private int fileType;
 }

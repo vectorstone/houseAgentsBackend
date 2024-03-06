@@ -3,12 +3,12 @@ package com.house.agents.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
+import com.house.agents.Enum.FileContentTypeEnum;
+import com.house.agents.Enum.SearchFileTypeEnum;
 import com.house.agents.entity.House;
 import com.house.agents.entity.ShareEntity;
 import com.house.agents.entity.ShareToHouse;
-import com.house.agents.entity.Subway;
 import com.house.agents.mapper.ShareEntityMapper;
-import com.house.agents.mapper.SubwayMapper;
 import com.house.agents.result.ResponseEnum;
 import com.house.agents.service.*;
 import com.house.agents.utils.BusinessException;
@@ -67,6 +67,7 @@ public class ShareEntityServiceImpl extends ServiceImpl<ShareEntityMapper, Share
             return Lists.newArrayList();
         }
         List<House> houses = houseService.listByIds(houseIds);
+        // 对于分享的房间来说默认传所有
         houseService.setHouseAttachment(houses);
         houses.forEach(house -> {
             // 隐藏敏感信息

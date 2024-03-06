@@ -8,7 +8,7 @@ spring:
       max-request-size: 50MB
       # 单个文件表单项文件大小限制 40MB
       max-file-size: 40MB
-  # 应用名称
+  # 应用名称tentTypeEnum
   application:
     name: system-service
   # 数据库的相关配置
