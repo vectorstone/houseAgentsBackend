@@ -9,7 +9,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.house.agents.Enum.FileContentTypeEnum;
+import com.house.agents.Enum.HouseStatusEnum;
 import com.house.agents.Enum.SearchFileTypeEnum;
+import com.house.agents.Enum.SearchHouseStatusEnum;
 import com.house.agents.entity.House;
 import com.house.agents.entity.HouseAttachment;
 import com.house.agents.entity.SysRole;
@@ -135,6 +137,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
             String remark = houseSearchVo.getRemark();
             String landlordName = houseSearchVo.getLandlordName();
             int fileType = houseSearchVo.getFileType();
+            int houseStatus = houseSearchVo.getHouseStatus();
 
             // if (StringUtils.isNotEmpty(landlordName)){
             //     List<SysUser> landlords = sysUserService.list(Wrappers.lambdaQuery(SysUser.class).like(SysUser::getName, landlordName));
@@ -184,12 +187,21 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
                 // 搜索的其实日期和结束日期不能为空
                 wrapper.le(House::getCreateTime, houseSearchVo.getEndTime()).ge(House::getCreateTime, houseSearchVo.getStartTime());
             }
+            // 根据附件的附件状态来查询相关的数据
             if (fileType != SearchFileTypeEnum.DEFAULT.getCode()) {
                 List<Long> houseIds = houseAttachmentMapper.getHouseId();
                 if (fileType == SearchFileTypeEnum.NOT_EMPTY.getCode()) {
                     wrapper.in(House::getId,houseIds);
                 } else if (fileType == SearchFileTypeEnum.EMPTY.getCode()) {
                     wrapper.notIn(House::getId,houseIds);
+                }
+            }
+            // 根据房子的状态来查询对应的数据
+            if (houseStatus != SearchHouseStatusEnum.DEFAULT.getCode()) {
+                if (houseStatus == SearchHouseStatusEnum.HOUSE_UP.getCode()) {
+                    wrapper.eq(House::getHouseStatus, HouseStatusEnum.HOUSE_UP.getCode());
+                } else if(houseStatus == SearchHouseStatusEnum.HOUSE_DOWN.getCode()) {
+                    wrapper.eq(House::getHouseStatus, HouseStatusEnum.HOUSE_DOWN.getCode());
                 }
             }
         }

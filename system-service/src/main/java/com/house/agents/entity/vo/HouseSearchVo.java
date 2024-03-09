@@ -75,4 +75,7 @@ public class HouseSearchVo {
      */
     @ApiModelProperty(value = "附件的类型")
     private int fileType;
+
+    @ApiModelProperty(value = "房子状态")
+    private int houseStatus;
 }

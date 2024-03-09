@@ -13,3 +13,5 @@ public enum HouseStatusEnum {
     private Integer code;//状态码
     private String desc;//描述
 }
+
+
