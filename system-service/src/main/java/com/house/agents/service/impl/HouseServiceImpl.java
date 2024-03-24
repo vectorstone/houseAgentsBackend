@@ -140,6 +140,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
             int houseStatus = houseSearchVo.getHouseStatus();
 
             // if (StringUtils.isNotEmpty(landlordName)){
+
             //     List<SysUser> landlords = sysUserService.list(Wrappers.lambdaQuery(SysUser.class).like(SysUser::getName, landlordName));
             //     if (CollectionUtils.isNotEmpty(landlords)){
             //         // 根据房东的姓名查询出来对应的userId
