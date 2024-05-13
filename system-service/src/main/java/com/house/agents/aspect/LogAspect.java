@@ -190,13 +190,14 @@ public class LogAspect {
                 log.info(XMDLogFormat.build().putTag("interfaceName", "aroundMethod").message(e.getMessage()));
             }
         }, executorService);
-        CompletableFuture.allOf(userInfoCf,logAndIpCf,setPerformanceCf).join();
-        // CompletableFuture.allOf(userInfoCf,setPerformanceCf).join();
-        // UserOptLog userOptLog = userOptLogBuilder.ip(ipAddr).operation(methodName).request("reqParam").response("respParam").performanceTime(afterRuntime + "ms").build();
-        // 将保存日志的操作修改为异步的方式
-        // userOptLogService.save(userOptLog);
-        userOptLogService.saveLog(userOptLog);
-
+        CompletableFuture<Void> future = CompletableFuture.allOf(userInfoCf, logAndIpCf, setPerformanceCf);
+        future.thenRun(() -> {
+            // CompletableFuture.allOf(userInfoCf,setPerformanceCf).join();
+            // UserOptLog userOptLog = userOptLogBuilder.ip(ipAddr).operation(methodName).request("reqParam").response("respParam").performanceTime(afterRuntime + "ms").build();
+            // 将保存日志的操作修改为异步的方式
+            // userOptLogService.save(userOptLog);
+            userOptLogService.saveLog(userOptLog);
+        });
         return result;
     }
 

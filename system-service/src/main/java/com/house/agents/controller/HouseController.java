@@ -32,6 +32,8 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 /**
  * <p>
@@ -61,7 +63,8 @@ public class HouseController {
     @Autowired
     private ShareEntityService shareEntityService;
 
-    @PreAuthorize("hasAnyAuthority('bnt.house.list')")
+
+    // @PreAuthorize("hasAnyAuthority('bnt.house.list')")
     @ApiOperation("获取房子的详细的情况")
     @PostMapping("/{houseId}")
     @LogAnnotation
@@ -69,7 +72,7 @@ public class HouseController {
         // excel也是只能上传自己的账单数据,不能上传别人的数据
         SysUser sysUser = validUser(token);
         Long userId = sysUser.getId();
-        House house = houseService.getById(houseId);
+        House house = houseService.getHouseInfo(houseId);
         // Cat.logEvent("getHouseInfo","getHouseInfo");
         if ((house == null || house.getUserId() != userId) && !isAdmin(sysUser)) {
             // 进来这里面就不返回对应的数据
@@ -121,7 +124,7 @@ public class HouseController {
     }
 
     @LogAnnotation
-    @PreAuthorize("hasAnyAuthority('bnt.house.list')")
+    // @PreAuthorize("hasAnyAuthority('bnt.house.list')")
     @ApiOperation("分页查询")
     @PostMapping("/{pageNum}/{pageSize}")
     public R getList(/* @RequestParam(value = "searchVo",required = false) SearchVo searchVo */

@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.house.agents.Enum.FileContentTypeEnum;
 import com.house.agents.Enum.HouseStatusEnum;
 import com.house.agents.Enum.SearchFileTypeEnum;
 import com.house.agents.Enum.SearchHouseStatusEnum;
@@ -27,12 +26,12 @@ import com.house.agents.service.HouseService;
 import com.house.agents.service.SysUserService;
 import com.house.agents.utils.Asserts;
 import com.house.agents.utils.BusinessException;
+import com.house.agents.utils.FutureUtils;
 import com.house.agents.utils.XMDLogFormat;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.ibatis.annotations.Param;
 import org.joda.time.DateTime;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,10 +42,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
@@ -272,18 +269,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         // HashMap<Long, CompletableFuture<SysUser>> sysUserCfMap = Maps.newHashMap();
         houses.forEach(house -> {
             try {
-                LambdaQueryWrapper<HouseAttachment> queryWrapper = Wrappers.lambdaQuery(HouseAttachment.class).eq(HouseAttachment::getHouseId, house.getId());
-                // // 设置查询的条件,根据searchVo里面的fileType
-                // if (fileType == SearchFileTypeEnum.IMAGE.getCode()) {
-                //     queryWrapper.and(t -> t.eq(HouseAttachment::getContentType, FileContentTypeEnum.HOUSE_IMAGE));
-                // } else if (fileType == SearchFileTypeEnum.VIDEO.getCode()) {
-                //     queryWrapper.and(t -> t.eq(HouseAttachment::getContentType, FileContentTypeEnum.HOUSE_VIDEO));
-                // } else {
-                //
-                // }
-                // 查询房子所属的附件并设置进去
-                CompletableFuture<List<HouseAttachment>> houseAttachmentCf = CompletableFuture.supplyAsync(() -> houseAttachmentService.list(
-                        queryWrapper), executorService);
+                CompletableFuture<List<HouseAttachment>> houseAttachmentCf = getAttachmentCf(house.getId());
 
                 // 查询房子所属的房东并设置进去
                 // CompletableFuture<SysUser> sysUserCf = CompletableFuture.supplyAsync(() -> sysUserService.getById(house.getUserId()), executorService);
@@ -309,6 +295,22 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    private CompletableFuture<List<HouseAttachment>> getAttachmentCf(Long houseId) {
+        LambdaQueryWrapper<HouseAttachment> queryWrapper = Wrappers.lambdaQuery(HouseAttachment.class).eq(HouseAttachment::getHouseId, houseId);
+        // // 设置查询的条件,根据searchVo里面的fileType
+        // if (fileType == SearchFileTypeEnum.IMAGE.getCode()) {
+        //     queryWrapper.and(t -> t.eq(HouseAttachment::getContentType, FileContentTypeEnum.HOUSE_IMAGE));
+        // } else if (fileType == SearchFileTypeEnum.VIDEO.getCode()) {
+        //     queryWrapper.and(t -> t.eq(HouseAttachment::getContentType, FileContentTypeEnum.HOUSE_VIDEO));
+        // } else {
+        //
+        // }
+        // 查询房子所属的附件并设置进去
+        CompletableFuture<List<HouseAttachment>> houseAttachmentCf = CompletableFuture.supplyAsync(() -> houseAttachmentService.list(
+                queryWrapper), executorService);
+        return houseAttachmentCf;
     }
 
     /**
@@ -445,5 +447,18 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         if (i <= 0) {
             throw new BusinessException(ResponseEnum.REPUBLISH_HOUSE_ERROR);
         }
+    }
+
+    @Override
+    public House getHouseInfo(String houseId) {
+        CompletableFuture<House> houseCf = CompletableFuture.supplyAsync(() -> this.getById(houseId), executorService);
+        CompletableFuture<List<HouseAttachment>> attachmentCf = getAttachmentCf(Long.valueOf(houseId));
+        CompletableFuture<House> completeHouseFuture = houseCf.thenCombine(attachmentCf, (house, attachements) -> {
+            if (!CollectionUtils.isEmpty(attachements)) {
+                house.setHouseAttachment(attachements);
+            }
+            return house;
+        });
+        return FutureUtils.get(completeHouseFuture);
     }
 }

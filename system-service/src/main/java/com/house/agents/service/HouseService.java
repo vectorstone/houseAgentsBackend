@@ -36,4 +36,6 @@ public interface HouseService extends IService<House> {
 
     void setHouseAttachment(List<House> houses);
 
+    House getHouseInfo(String houseId);
+
 }
