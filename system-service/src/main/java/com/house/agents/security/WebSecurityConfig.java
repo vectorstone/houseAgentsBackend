@@ -34,6 +34,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
                 //指定某些接口不需要通过验证即可访问,登录接口不需要认证
                 .antMatchers("/admin/user/login").permitAll()
                 .antMatchers("/admin/house/shareHouse").permitAll()
+                .antMatchers("/admin/user/wxLogin").permitAll() // 微信小程序的登录的入口
                 //测试放行swagger的请求
                 .antMatchers("/doc.html").permitAll()
                 .antMatchers("/favicon.ico").permitAll()

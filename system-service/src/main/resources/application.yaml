@@ -69,13 +69,15 @@ wx:
     # wx sdk中获取二维码登录页面的url地址
     qrconnectUrl: https://open.weixin.qq.com/connect/qrconnect
     # 应用在wx平台注册时获取的appid
-    appid: wxed9954c01bb89b47
+    appid: ENC(47NtExp34GqQq2PpvLbYNuRnmE6ZifiLrnPVT8no16yoe855DCw3dukayg/6NYfd6s2FC9HhVC+1dUbbNLX3cw==)
     # 授权成功后,需要重定向的服务器后端的接口的地址,这个地址时应用在微信平台申请时的地址,如果填写的不对的话,重定向会失败
     redirect_uri: http://localhost:8160/api/core/wx/callback
     # 应用在wx平台注册时分配的密钥
-    secret: a7482517235173ddb4083788de60b90e
-    # 获取wx用户授权token的地址
-    accessTokenUrl: https://api.weixin.qq.com/sns/oauth2/access_token
+    secret: ENC(6yap/ZZoVgyPUENTZ9OxeLqEbgnwwKTDI8tUQFiW56NkTGR8Cp/wu8XDp7sYMes+mQK8DCI/2k//71kyTRQ1cInHui6c19qAys73kctZyLk=)
+    # 获取wx用户授权token的地址 pc的
+#    accessTokenUrl: https://api.weixin.qq.com/sns/oauth2/access_token
+    # 下面这个是微信小程序的获取token的地址
+    accessTokenUrl: https://api.weixin.qq.com/sns/jscode2session
     # 尚融宝用户项目首页的地址
     srbIndexPageUrl: http://localhost:3000
     # 获取wx用户个人信息的地址

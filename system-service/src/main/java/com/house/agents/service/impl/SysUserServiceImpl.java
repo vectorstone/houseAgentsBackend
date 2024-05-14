@@ -214,9 +214,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         String salt = UUID.randomUUID().toString().replace("-", "").substring(0, 6);
         // String encryptPassword = MD5.encrypt(sysUser.getPassword());
         // String encryptPassword = MD5.encrypt(MD5.encrypt(sysUser.getPassword()) + salt);
-        String encryptPassword = passwordEncoder.encode(sysUser.getPassword());
-        sysUser.setPassword(encryptPassword);
-        sysUser.setSalt(salt);
+
+        // 通过小程序登录的用户这个地方的密码可能为空
+        String password = sysUser.getPassword();
+        if (StringUtils.isNotEmpty(password)) {
+            String encryptPassword = passwordEncoder.encode(password);
+            sysUser.setPassword(encryptPassword);
+            sysUser.setSalt(salt);
+        }
 
 
         //有的人不删除提示的那个内容,所以增加一个判断头像的链接中是否包含中文

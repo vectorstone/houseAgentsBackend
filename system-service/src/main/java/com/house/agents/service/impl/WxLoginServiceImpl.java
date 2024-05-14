@@ -1,9 +1,36 @@
 package com.house.agents.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.google.common.collect.Maps;
+import com.house.agents.config.WxLoginProperties;
+import com.house.agents.entity.SysRole;
+import com.house.agents.entity.SysUser;
+import com.house.agents.result.ResponseEnum;
+import com.house.agents.service.SysUserService;
+import com.house.agents.service.UserLoginRecordService;
 import com.house.agents.service.WxLoginService;
+import com.house.agents.utils.Asserts;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+import java.util.Map;
+import com.house.agents.utils.HttpClientUtils;
+import java.text.ParseException;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -12,7 +39,9 @@ public class WxLoginServiceImpl implements WxLoginService {
     // 2. 通过code参数加上AppID和AppSecret等，通过API换取access_token；
     // 3. 通过access_token进行接口调用，获取用户基本数据资源或帮助用户实现基本操作。
     @Autowired
-    private UserInfoService userInfoService;
+    RedisTemplate redisTemplate;
+    @Autowired
+    private SysUserService sysUserService;
     @Autowired
     private UserLoginRecordService userLoginRecordService;
     @Override
@@ -48,6 +77,115 @@ public class WxLoginServiceImpl implements WxLoginService {
         }
     }
 
+
+    @Override
+    public Map<String,Object> wxLogin(String code,  HttpServletRequest request) {
+        try {
+
+            // 2.根据回传回来的code,获取accessToken
+            // https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code
+            // 2.1设置需要的请求参数
+            Map<String,String> params = Maps.newHashMap();
+            params.put("appid",WxLoginProperties.APP_ID);
+            params.put("secret",WxLoginProperties.SECRET);
+            // params.put("code",code); pc端的这个请求参数是code
+            params.put("js_code",code); // 小程序端的这个query param的名字是 js_code
+            params.put("grant_type","authorization_code");
+            // 2.2创建httpClientUtils对象,用来发起请求的对象
+            HttpClientUtils httpClientUtils = new HttpClientUtils(WxLoginProperties.ACCESS_TOKEN_URL,params);
+            // 2.3调用get方法,发起请求(通过浏览器发起的请求,都是get方式的)
+            httpClientUtils.get();
+            // 2.4获取响应结果
+            String content = httpClientUtils.getContent();
+            // 2.5将响应转为map集合
+            Map<String,Object> map = JSON.parseObject(content, Map.class);
+            String jsonString = JSON.toJSONString(map);
+            log.info(jsonString);
+            // 2.6判断accessToken获取成功还是失败(如果响应中包含errcode,那么说明获取失败,直接抛异常)
+            Asserts.AssertNotTrue(map.containsKey("errcode"),ResponseEnum.WEIXIN_FETCH_ACCESSTOKEN_ERROR);
+            // 2.7取出获取到的accessToken和openid(这个后面会用到)
+            // openid对应唯一的一个wx用户,wx用户第一次使用wx登录的时候,我们会将其信息保存到数据库中,后续可以使用openid查询用户
+            // String accessToken = (String)map.get("access_token"); access_token是pc端的
+            // "{\"session_key\":\"PFdXMDs3BQjWWHOonysrZw==\",\"openid\":\"oQf666xq0A8IldTsD4egTgXXbgtg\"}"
+            String accessToken = (String)map.get("session_key"); // 小程序端的应该是session_key
+            String openId = (String)map.get("openid");
+
+
+            // 获取到openid之后, 要去数据库查询一下,确认下该用户是第一次登录还是之前有登录过
+            /**
+             * 这里有三种情况:
+             * 1.用户第一次使用微信登录,那么直接将用户信息插入到数据库中
+             * 2.用户不是第一次使用微信登录,但是距离第一次登录已经超过了3天,所以需要更新用户的头像和昵称信息
+             * 3.用户不是第一次使用微信登录,但是距离第一次登录还没要超过3天,所以可以直接数据库中的数据,不需要去微信平台获取用户的信息数据了
+             */
+            SysUser sysUser = sysUserService.getOne(Wrappers.lambdaQuery(SysUser.class).eq(SysUser::getOpenid, openId));
+            if(sysUser == null){
+                // 进来这里面,说明用户是第一次登录,需要将用户信息插入到数据库中,对应情况1
+                // Map<String, Object> userInfoMap = getUserInfoMap(map, accessToken, openId);
+                // log.info(JSON.toJSONString(userInfoMap));
+                // // 3.7将用户的相关信息取出
+                // String headimgurl = userInfoMap.get("headimgurl").toString();
+                // String nickName = userInfoMap.get("nickname").toString();
+
+                // 4.将用户信息保存到数据库中
+                sysUser = new SysUser();
+
+                // 4.1设置用户的头像
+                // sysUser.setHeadUrl(headimgurl);
+                // // 4.2设置用户的nickName
+                // sysUser.setName(nickName);
+                // 4.3设置用户的openId
+                sysUser.setOpenid(openId);
+                sysUser.setUsername(UUID.randomUUID().toString().replace("-", "").substring(0, 8));
+                // 4.4保存用户信息
+                sysUserService.addUser(sysUser);
+                // sysUserService.save(sysUser);
+
+            }else if(sysUser != null && System.currentTimeMillis() - sysUser.getUpdateTime().getTime() >= 3*24*60*60*1000){
+                // 进来这里面,说明用户不是第一次登录,而且距离上次登录已经超过了3天时间,需要更新用户的头像和昵称,对应情况2
+                // Map<String, Object> userInfoMap = getUserInfoMap(map, accessToken, openId);
+                // // 3.7将用户的相关信息取出
+                // String headimgurl = userInfoMap.get("headimgurl").toString();
+                // String nickName = userInfoMap.get("nickname").toString();
+                // sysUser.setName(nickName);
+                // sysUser.setHeadUrl(headimgurl);
+                // 更新用户的信息到数据库中
+                sysUserService.updateById(sysUser);
+            }
+            // 除此之外的情况,就是情况3
+
+            // 保存用户的登录的日志
+            userLoginRecordService.saveLoginRecord(sysUser,request);
+
+            // 5.生成token,并且将浏览器的页面重定向到主页,携带token
+            String token = UUID.randomUUID().toString().replaceAll("-", "");
+
+
+            List<String> userPermsList = sysUserService.getUserBtnPersByUserId(sysUser.getId());
+            sysUser.setUserPermsList(userPermsList);
+            // 查询用户的角色列表,然后将其设置到用户对象中,后面根据这个角色列表判断是否为管理员,如果为管理员的话,那么可以查询所有其他用户的数据
+            List<SysRole> roleList = sysUserService.getUserRoleListByUserId(sysUser.getId());
+            sysUser.setRoleList(roleList);
+
+            // 将用户的token存入redis里面
+            // SysUser sysUser = (SysUser)redisTemplate.boundValueOps(token).get();
+            redisTemplate.boundValueOps(token).set(sysUser,24, TimeUnit.HOURS);
+
+            Map<String, Object> result = Maps.newHashMap();
+            result.put("token",token);
+            result.put("sysUser",sysUser);
+
+            return result;
+
+        } catch (Exception e) {
+            // 放大异常,使用Exception来接收
+            // 打印异常信息
+            log.error("调用微信登录失败,异常信息为:{}", ExceptionUtils.getStackTrace(e));
+            // 这里就不再抛出异常了,而是直接返回一个前端的异常页面的地址,否则用户会看到服务器返回的异常信息,比较的尴尬
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public String callback(String code, String state, HttpSession session, HttpServletRequest request) {
         try {
@@ -64,7 +202,7 @@ public class WxLoginServiceImpl implements WxLoginService {
             // 2.根据回传回来的code,获取accessToken
             // https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code
             // 2.1设置需要的请求参数
-            Map<String,String> params = new HashMap<>();
+            Map<String,String> params = Maps.newHashMap();
             params.put("appid",WxLoginProperties.APP_ID);
             params.put("secret",WxLoginProperties.SECRET);
             params.put("code",code);
@@ -91,7 +229,7 @@ public class WxLoginServiceImpl implements WxLoginService {
              * 2.用户不是第一次使用微信登录,但是距离第一次登录已经超过了3天,所以需要更新用户的头像和昵称信息
              * 3.用户不是第一次使用微信登录,但是距离第一次登录还没要超过3天,所以可以直接数据库中的数据,不需要去微信平台获取用户的信息数据了
              */
-            UserInfo userInfo = userInfoService.getOne(Wrappers.lambdaQuery(UserInfo.class).eq(UserInfo::getOpenid, openId));
+            SysUser userInfo = sysUserService.getOne(Wrappers.lambdaQuery(SysUser.class).eq(SysUser::getOpenid, openId));
             if(userInfo == null){
                 // 进来这里面,说明用户是第一次登录,需要将用户信息插入到数据库中,对应情况1
                 Map<String, Object> userInfoMap = getUserInfoMap(map, accessToken, openId);
@@ -100,15 +238,15 @@ public class WxLoginServiceImpl implements WxLoginService {
                 String nickName = userInfoMap.get("nickname").toString();
 
                 // 4.将用户信息保存到数据库中
-                userInfo = new UserInfo();
+                userInfo = new SysUser();
                 // 4.1设置用户的头像
-                userInfo.setHeadImg(headimgurl);
+                userInfo.setHeadUrl(headimgurl);
                 // 4.2设置用户的nickName
-                userInfo.setNickName(nickName);
+                userInfo.setName(nickName);
                 // 4.3设置用户的openId
                 userInfo.setOpenid(openId);
                 // 4.4保存用户信息
-                userInfoService.save(userInfo);
+                sysUserService.save(userInfo);
 
             }else if(userInfo != null && System.currentTimeMillis() - userInfo.getUpdateTime().getTime() >= 3*24*60*60*1000){
                 // 进来这里面,说明用户不是第一次登录,而且距离上次登录已经超过了3天时间,需要更新用户的头像和昵称,对应情况2
@@ -116,10 +254,10 @@ public class WxLoginServiceImpl implements WxLoginService {
                 // 3.7将用户的相关信息取出
                 String headimgurl = userInfoMap.get("headimgurl").toString();
                 String nickName = userInfoMap.get("nickname").toString();
-                userInfo.setNickName(nickName);
-                userInfo.setHeadImg(headimgurl);
+                userInfo.setName(nickName);
+                userInfo.setHeadUrl(headimgurl);
                 // 更新用户的信息到数据库中
-                userInfoService.updateById(userInfo);
+                sysUserService.updateById(userInfo);
             }
             // 除此之外的情况,就是情况3
 
@@ -127,7 +265,10 @@ public class WxLoginServiceImpl implements WxLoginService {
             userLoginRecordService.saveLoginRecord(userInfo,request);
 
             // 5.生成token,并且将浏览器的页面重定向到主页,携带token
-            String token = JwtUtils.createToken(userInfo.getId(), userInfo.getNickName());
+            String token = UUID.randomUUID().toString().replaceAll("-", "");
+
+            // 将用户的token存入redis里面
+            SysUser sysUser = (SysUser)redisTemplate.boundValueOps(token).get();
             return "redirect:" + WxLoginProperties.SRB_INDEX_PAGE_URL + "?token=" +token;
 
         } catch (Exception e) {
@@ -144,7 +285,7 @@ public class WxLoginServiceImpl implements WxLoginService {
         // 3.根据accessToken,获取用户相关的数据
         // https://api.weixin.qq.com/sns/userinfo?access_token=
         // 3.1准备获取用户信息的请求参数
-        Map<String,String> params1 = new HashMap<>();
+        Map<String,String> params1 = Maps.newHashMap();
         params1.put("access_token", accessToken);
         params1.put("openid", openId);
         // 3.2准备httpClientUtils对象

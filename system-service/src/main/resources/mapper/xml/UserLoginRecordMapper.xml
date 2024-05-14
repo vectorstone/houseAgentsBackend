@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.house.agents.mapper.UserLoginRecordMapper">
+    
+    
+    <!--<select id="getLoginRecords" resultType="java.util.Map">
+        SELECT temp.loginDate , COUNT(temp.loginDate)
+        FROM (SELECT DATE(create_time) AS loginDate
+              FROM user_login_record) AS temp
+        WHERE temp.loginDate >= #{start} AND temp.loginDate &lt;= #{end}
+        GROUP BY temp.loginDate
+    </select>-->
+    <!--<select id="getLoginRecords" resultType="com.atguigu.srb.core.entity.vo.LoginData">
+        SELECT temp.loginDate , COUNT(temp.loginDate)
+        FROM (SELECT DATE(create_time) AS loginDate
+              FROM user_login_record) AS temp
+        WHERE temp.loginDate >= #{start} AND temp.loginDate &lt;= #{end}
+        GROUP BY temp.loginDate
+    </select>-->
+    <select id="getLoginRecords" resultType="java.util.Map">
+        SELECT temp.loginDate , COUNT(temp.loginDate) counts
+        FROM (SELECT DATE(create_time) AS loginDate
+              FROM user_login_record) AS temp
+        WHERE temp.loginDate >= #{start} AND temp.loginDate &lt;= #{end}
+        GROUP BY temp.loginDate
+    </select>
+</mapper>

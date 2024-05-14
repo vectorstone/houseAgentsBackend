@@ -16,12 +16,23 @@ public class JasyptTest {
     void test (){
         List<String> properties = new ArrayList<>();
         properties.add("root");
-        properties.add("j45ku87R3i2i9v");
-        properties.add("houseAgents231222");
+        properties.add("");
+        properties.add("");
         properties.forEach(property -> {
             System.out.println(property + " = " + encryptor.encrypt(property));
         });
-        String houseAgents231222 = encryptor.encrypt("houseAgents231222");
-        System.out.println("houseAgents231222 = " + houseAgents231222);
+        String houseAgents231222 = encryptor.encrypt("");
+        System.out.println(" = " + houseAgents231222);
+    }
+
+    @Test
+    void test2 (){
+        List<String> properties = new ArrayList<>();
+        properties.add("");
+        properties.add("");
+        properties.forEach(property -> {
+            System.out.println(property + " = " + encryptor.encrypt(property));
+        });
+
     }
 }

@@ -2,6 +2,7 @@ package com.house.agents.controller;
 
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.house.agents.annotation.LogAnnotation;
 import com.house.agents.entity.SysUser;
 import com.house.agents.entity.vo.LoginVo;
@@ -10,6 +11,7 @@ import com.house.agents.result.R;
 import com.house.agents.result.ResponseEnum;
 import com.house.agents.service.SysRoleService;
 import com.house.agents.service.SysUserService;
+import com.house.agents.service.WxLoginService;
 import com.house.agents.utils.BusinessException;
 import com.house.agents.utils.MD5;
 import com.house.agents.utils.Result;
@@ -51,6 +53,16 @@ public class SysUserController {
     RedisTemplate redisTemplate;
     @Autowired
     private SysRoleService sysRoleService;
+
+    @Autowired
+    private WxLoginService wxLoginService;
+
+    // /admin/user/wxLogin
+    @GetMapping("/wxLogin")
+    public R wxLogin(@RequestParam("code")String code,HttpServletRequest request) {
+        Map<String, Object> map = wxLoginService.wxLogin(code, request);
+        return R.ok().data(map);
+    }
 
 
     @PreAuthorize("hasAnyAuthority('bnt.sysUser.list')")
