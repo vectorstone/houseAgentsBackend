@@ -137,6 +137,12 @@ public class SysUserController {
         return R.ok();
     }
 
+    /**
+     * 下面这个接口访问不到, 用户的登陆认证的整个过程是在过滤器里面进行的
+     * @see com.house.agents.security.TokenLoginFilter#successfulAuthentication(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, javax.servlet.FilterChain, org.springframework.security.core.Authentication)
+     * @param loginVo
+     * @return
+     */
     @LogAnnotation
     // @ApiOperation("用户登录") 这个接口永远无法访问的到,com.house.agents.security.TokenLoginFilter.successfulAuthentication认证成功之后直接就返回了
     @PostMapping("/login")

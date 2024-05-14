@@ -95,6 +95,7 @@ public class TokenLoginFilter extends UsernamePasswordAuthenticationFilter {
         // 将获取到的用户的信息跟随token一起返回给前端,这样前端不用再查询getUserInfo接口获取对应的信息了
         // 密码信息清空掉
         sysUser.setPassword("");
+        sysUser.setOpenid("");
         map.put("sysUser", sysUser);
         ResponseUtil.out(response, Result.ok(map));
     }

@@ -32,8 +32,8 @@ public class SwaggerConfig {
     }
     private ApiInfo adminApiInfo(){
         return new ApiInfoBuilder()
-                .title("余泽仁租房后台管理系统-API文档")
-                .description("本文档描述了余泽仁租房后台管理系统接口")
+                .title("租个房后台管理系统-API文档")
+                .description("本文档描述了租个房后台管理系统接口")
                 .version("1.0")
                 .contact(new Contact("houseAgents", "http://www.google.com", "zzuwswxg@gmail.com"))
                 .build();

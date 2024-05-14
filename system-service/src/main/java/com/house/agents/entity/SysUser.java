@@ -37,6 +37,9 @@ public class SysUser implements Serializable {
     @ApiModelProperty(value = "密码")
     private String password;
 
+    @ApiModelProperty(value = "微信code")
+    private String openid;
+
     @ApiModelProperty(value = "姓名")
     private String name;
 
@@ -82,5 +85,7 @@ public class SysUser implements Serializable {
     @ApiModelProperty("用户的权限集合")
     @TableField(exist = false)
     List<String> userPermsList;
+
+
 
 }
