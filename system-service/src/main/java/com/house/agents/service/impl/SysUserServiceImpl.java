@@ -54,6 +54,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     private static final Pattern CHINESE_AND_SPECIAL_CHAR_PATTERN = Pattern.compile("[\u4E00-\u9FA5|\\！|\\，|\\。|\\（|\\）|\\《|\\》|\\“|\\”|\\？|\\：|\\；|\\【|\\】]");
 
+
     @Override
     public Page<SysUser> getPageList(Integer page, Integer limit, UserVo userQueryVo) {
         Page<SysUser> userPage = new Page<>(page,limit);

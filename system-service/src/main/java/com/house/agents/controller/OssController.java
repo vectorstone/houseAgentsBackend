@@ -24,6 +24,16 @@ public class OssController {
     @Autowired
     OssService ossService;
 
+    // /api/oss/userInfo/upload
+    @ApiOperation("用户头像上传")
+    @PostMapping("/userInfo/upload")
+    public R uploadAvatar(MultipartFile file,
+                     HttpServletRequest request, HttpServletResponse response) {
+        String path = ossService.uploadAvatar(file,request,response);
+        return R.ok().data("filePath", path);
+    }
+
+    // /api/oss/upload
     // requestParam方式传文件的方法
     // @PreAuthorize("hasAnyAuthority('bnt.house.attachmentUpload')")
     @PostMapping("/upload")

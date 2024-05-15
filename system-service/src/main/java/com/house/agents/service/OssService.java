@@ -9,4 +9,6 @@ public interface OssService {
     String upload(MultipartFile file, String module, HttpServletRequest request, HttpServletResponse response);
 
     void deleteByPath(String path,String token);
+
+    String uploadAvatar(MultipartFile file, HttpServletRequest request, HttpServletResponse response);
 }

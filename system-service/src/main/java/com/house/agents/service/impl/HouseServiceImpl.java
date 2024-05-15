@@ -42,10 +42,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * <p>
@@ -72,6 +74,13 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
 
     @Autowired
     private SysUserService sysUserService;
+
+    @Override
+    public List<House> getHouseInfoNoLogin() {
+        List<House> houses = this.list(Wrappers.lambdaQuery(House.class).last("limit 0,8").orderByDesc(House::getUpdateTime));
+        setHouseAttachment(houses,null);
+        return houses;
+    }
 
     @Override
     public void importHouses(MultipartFile file, Long userId) {
@@ -117,11 +126,13 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         Page<House> housePage = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<House> wrapper = null;
         Long userId = sysUser.getId();
-        if (isAdmin(sysUser)) {
-            wrapper = Wrappers.lambdaQuery(House.class);
-        } else {
-            wrapper = Wrappers.lambdaQuery(House.class).eq(House::getUserId, userId);
-        }
+        // if (isAdmin(sysUser)) {
+        //     wrapper = Wrappers.lambdaQuery(House.class);
+        // } else {
+        //     wrapper = Wrappers.lambdaQuery(House.class).eq(House::getUserId, userId);
+        // }
+        // 允许普通的用户查询所有的数据,但是房东的信息会暴露
+        wrapper = Wrappers.lambdaQuery(House.class);
         // 构建查询的条件
         if (houseSearchVo != null) {
             // 小区名称
@@ -207,12 +218,13 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         wrapper.orderByDesc(House::getUpdateTime); // 将最新修改的房子置顶在前面
         Page<House> housePageData = this.page(housePage, wrapper);
         // 设置house的附件和房东的姓名的方法
-        setExtraAttributes(housePageData);
+        setExtraAttributes(housePageData,sysUser);
 
         return housePageData;
     }
 
     private boolean isAdmin(SysUser sysUser) {
+        if (Objects.isNull(sysUser)) return false;
         List<SysRole> roleList = sysUser.getRoleList();
         if (CollectionUtils.isEmpty(roleList)) {
             // 如果roleList为空的话,那么说明是有问题的,需要抛出一场
@@ -229,11 +241,12 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
      *
      * @param housePageData 分页的page对象
      */
-    private void setExtraAttributes(Page<House> housePageData) {
+    private void setExtraAttributes(Page<House> housePageData,SysUser sysUser) {
+        // sysUser前面已经校验过了,不可能为空了
         if (housePageData != null && CollectionUtils.isNotEmpty(housePageData.getRecords())) {
             // 如果查询出来的结果不为空的话,那么就设置对应的房子的附件进去
             List<House> houses = housePageData.getRecords();
-            setHouseAttachment(houses);
+            setHouseAttachment(houses,sysUser);
             // if (fileType == SearchFileTypeEnum.DEFAULT.getCode()) {
             //     return;
             // }
@@ -264,11 +277,18 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
     }
 
     @Override
-    public void setHouseAttachment(List<House> houses) {
+    public void setHouseAttachment(List<House> houses,SysUser sysUser) {
         HashMap<Long, CompletableFuture<List<HouseAttachment>>> houseAttachmentCfMap = Maps.newHashMap();
         // HashMap<Long, CompletableFuture<SysUser>> sysUserCfMap = Maps.newHashMap();
+
         houses.forEach(house -> {
             try {
+
+                // 如果不是管理员的话, 那么就需要将房子信息里面的房东信息去除
+                if (!isAdmin(sysUser)) {
+                    house.setLandlordName("");
+                }
+
                 CompletableFuture<List<HouseAttachment>> houseAttachmentCf = getAttachmentCf(house.getId());
 
                 // 查询房子所属的房东并设置进去
@@ -376,7 +396,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         housePage.setSearchCount(true);
         housePage.setPages(pages);
         housePage.setRecords(deletedHousesWithPage);
-        setExtraAttributes(housePage);
+        setExtraAttributes(housePage,sysUser);
         return housePage;
     }
 

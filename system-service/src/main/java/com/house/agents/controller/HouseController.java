@@ -63,6 +63,14 @@ public class HouseController {
     @Autowired
     private ShareEntityService shareEntityService;
 
+    // /admin/house/unLogin/houseInfo
+    @ApiOperation("未登录的时候获取房源信息")
+    @GetMapping("/unLogin/houseInfo")
+    public R getHouseInfoUnLogin() {
+        List<House> houseInfoNoLogin = houseService.getHouseInfoNoLogin();
+        return R.ok().data("houses", houseInfoNoLogin);
+    }
+
 
     // @PreAuthorize("hasAnyAuthority('bnt.house.list')")
     @ApiOperation("获取房子的详细的情况")

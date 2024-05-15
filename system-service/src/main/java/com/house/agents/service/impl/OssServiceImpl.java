@@ -19,6 +19,7 @@ import com.house.agents.result.ResponseEnum;
 import com.house.agents.service.HouseAttachmentService;
 import com.house.agents.service.HouseService;
 import com.house.agents.service.OssService;
+import com.house.agents.service.SysUserService;
 import com.house.agents.utils.BusinessException;
 import com.house.agents.utils.CookieUtils;
 import com.house.agents.utils.ResultCodeEnum;
@@ -55,6 +56,7 @@ public class OssServiceImpl implements OssService {
     private HouseService houseService;
     @Autowired
     private HouseAttachmentService houseAttachmentService;
+
 
     /**
      *
@@ -174,6 +176,67 @@ public class OssServiceImpl implements OssService {
             }
         }
 
+    }
+
+    @Override
+    public String uploadAvatar(MultipartFile file, HttpServletRequest request, HttpServletResponse response) {
+        //从请求头中获取token,从而可以知道目前上传图片的用户是哪一个 230907
+        String token = request.getHeader("token"); //这种方式获取不到token,因为前端图片上传里面的请求没有经过前端的拦截器,所以请求头里面没有设置token
+        if (StringUtils.isBlank(token)) {
+            token = CookieUtils.getCookieValue(request, "vue_admin_template_token");//只能通过cookie的方式获取到对应的token
+        }
+        if (StringUtils.isBlank(token)) {
+            token = CookieUtils.getCookieValue(request, "token");
+        }
+        if (StringUtils.isBlank(token)) {
+            throw new BusinessException(ResultCodeEnum.LOGIN_AUTH.getMessage());
+        }
+        SysUser sysUser = (SysUser)redisTemplate.boundValueOps(token).get();
+        // 其实如果实在是获取不到token的话,也可以通过前端传过来的houseId查询获取对应的house,然后通过house里面的userId获取到对应的用户的信息,只是这种方式性能会差一点
+
+        //如果获取不到sysUser有可能是用户没有登录或者登录的信息已经过期了,可以抛出异常
+        if (sysUser == null){
+            //进来这里面说明登录的信息已经过期了或者用户压根就没有登录
+            throw new BusinessException(ResultCodeEnum.LOGIN_AUTH.getMessage());
+        }
+
+        //1.先定义文件的名字objectName
+        //最终拼出来的效果类似于 avatar/2023/07/07/23423423423_xcsdf.jpg
+        // String objectName = houseId + "-" + sysUser.getName() +  new DateTime().toString("/yyyy/MM/dd/") +
+        //230908 优化文件保存的路径,直接使用作业的名称(houseId),不再使用module + 用户姓名的方式
+        String originalFilename = file.getOriginalFilename();
+        String objectName = "avatar" +  new DateTime().toString("/yyyy/MM/dd/") +
+                System.currentTimeMillis() + "_" + UUID.randomUUID().toString()
+                //包含开始,不包含结束
+                .substring(0,6) + originalFilename.substring(originalFilename
+                //取文件的后缀名
+                .lastIndexOf("."));
+        //2.定义文件的存储的路径用来回显
+        String path = OssProperties.SCHEMA + OssProperties.BUCKETNAME + "." + OssProperties.ENDPOINT + "/" + objectName;
+        OSS ossClient = null;
+        //3.创建输入流
+        try {
+            ossClient = getOssClient();
+            InputStream inputStream = file.getInputStream();
+            //4.创建PutObjectRequest对象
+            PutObjectRequest putObjectRequest = new PutObjectRequest(OssProperties.BUCKETNAME, objectName, inputStream);
+            //5.创建PutObjcet请求
+            PutObjectResult putObjectResult = ossClient.putObject(putObjectRequest);
+
+            sysUser.setHeadUrl(path);
+
+            //6.返回文件的路径给前端做回显
+            return path;
+        } catch (Exception e) {
+            //打印异常的堆栈信息
+            log.error("文件上传失败,失败信息是:{}",ExceptionUtils.getStackTrace(e));
+            //抛出我们的自定义异常
+            throw new BusinessException(ResponseEnum.UPLOAD_ERROR);
+        }finally {
+            if (ossClient != null) {
+                ossClient.shutdown();
+            }
+        }
     }
 
     //获取ossClient的方法单独的抽出来

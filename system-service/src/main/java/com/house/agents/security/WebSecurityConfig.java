@@ -35,6 +35,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
                 .antMatchers("/admin/user/login").permitAll()
                 .antMatchers("/admin/house/shareHouse").permitAll()
                 .antMatchers("/admin/user/wxLogin").permitAll() // 微信小程序的登录的入口
+                .antMatchers("/admin/house/unLogin/houseInfo").permitAll() // 未登录的时候可以允许用户获取前10条数据
                 //测试放行swagger的请求
                 .antMatchers("/doc.html").permitAll()
                 .antMatchers("/favicon.ico").permitAll()
@@ -58,7 +59,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
         web.ignoring().antMatchers("/favicon.ico","/swagger-resources/**",
                 "/webjars/**", "/v2/**", "/doc.html",
                 //注册的请求不拦截
-                "/admin/user/save","/api/oss/upload");
+                "/admin/user/save","/api/oss/upload","/api/oss/userInfo/upload");
     }
 
     // @Override

@@ -1,5 +1,6 @@
 package com.house.agents.security;
 
+import com.google.common.collect.Lists;
 import com.house.agents.entity.SysUser;
 import com.house.agents.utils.CookieUtils;
 import com.house.agents.utils.MutableHttpServletRequest;
@@ -17,6 +18,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,6 +53,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     private RedisTemplate redisTemplate;
 
+    private final static List<String> WHITE_LIST = Lists.newArrayList("/admin/user/login","/admin/house/shareHouse","/admin/user/wxLogin","/admin/house/unLogin/houseInfo");
+
     public TokenAuthenticationFilter(RedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
@@ -68,10 +72,15 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         // MutableHttpServletRequest request = new MutableHttpServletRequest(req);
 
         //如果是登录的接口或者是批量分享房源的接口或者是微信登录的接口，直接放行
-        if("/admin/user/login".equals(requestURI) || "/admin/house/shareHouse".equals(requestURI) || "/admin/user/wxLogin".equals(requestURI)/*|| "/api/oss/upload/".equals(request.getRequestURI())*/ ) {
+        // /unLogin/houseInfo
+        if (WHITE_LIST.stream().anyMatch(t -> t.equals(requestURI))) {
             chain.doFilter(request, response);
             return;
         }
+        // if("/admin/user/login".equals(requestURI) || "/admin/house/shareHouse".equals(requestURI) || "/admin/user/wxLogin".equals(requestURI)/*|| "/api/oss/upload/".equals(request.getRequestURI())*/ ) {
+        //     chain.doFilter(request, response);
+        //     return;
+        // }
 
         //获取认证信息
         UsernamePasswordAuthenticationToken authentication = getAuthentication(request);

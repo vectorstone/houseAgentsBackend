@@ -68,7 +68,7 @@ public class ShareEntityServiceImpl extends ServiceImpl<ShareEntityMapper, Share
         }
         List<House> houses = houseService.listByIds(houseIds);
         // 对于分享的房间来说默认传所有
-        houseService.setHouseAttachment(houses);
+        houseService.setHouseAttachment(houses,null);
         houses.forEach(house -> {
             // 隐藏敏感信息
             house.setKeyOrPassword("");

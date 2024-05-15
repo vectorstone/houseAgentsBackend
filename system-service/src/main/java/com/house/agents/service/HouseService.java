@@ -19,6 +19,7 @@ import java.util.List;
  * @since 2023-07-28
  */
 public interface HouseService extends IService<House> {
+    List<House> getHouseInfoNoLogin();
 
     void importHouses(MultipartFile file, Long userId);
 
@@ -34,7 +35,7 @@ public interface HouseService extends IService<House> {
 
     void rePublishByIds(List<String> houseIds);
 
-    void setHouseAttachment(List<House> houses);
+    void setHouseAttachment(List<House> houses,SysUser sysUser);
 
     House getHouseInfo(String houseId);
 

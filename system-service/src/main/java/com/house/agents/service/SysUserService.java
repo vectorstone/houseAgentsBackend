@@ -1,5 +1,6 @@
 package com.house.agents.service;
 
+import com.house.agents.entity.House;
 import com.house.agents.entity.MyPasswordVo;
 import com.house.agents.entity.SysRole;
 import com.house.agents.entity.SysUser;

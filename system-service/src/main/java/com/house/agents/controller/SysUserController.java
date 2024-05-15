@@ -22,6 +22,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.data.redis.core.BoundValueOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -56,6 +57,19 @@ public class SysUserController {
 
     @Autowired
     private WxLoginService wxLoginService;
+
+    // /admin/user/update/userInfo
+    @ApiOperation("更新用户的头像和昵称信息")
+    @GetMapping("/update/userInfo")
+    public R UpdateUserInfo(@RequestHeader("token")String token,@RequestParam String name, @RequestParam String headUrl) {
+        SysUser sysUser = (SysUser) redisTemplate.boundValueOps(token).get();
+        sysUser.setName(name);
+        sysUser.setHeadUrl(headUrl);
+        sysUserService.updateById(sysUser);
+        redisTemplate.delete(token);
+        redisTemplate.boundValueOps(token).set(sysUser);
+        return R.ok();
+    }
 
     // /admin/user/wxLogin
     @GetMapping("/wxLogin")
