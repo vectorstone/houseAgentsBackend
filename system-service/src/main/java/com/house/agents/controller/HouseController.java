@@ -82,10 +82,10 @@ public class HouseController {
         Long userId = sysUser.getId();
         House house = houseService.getHouseInfo(houseId);
         // Cat.logEvent("getHouseInfo","getHouseInfo");
-        if ((house == null || house.getUserId() != userId) && !isAdmin(sysUser)) {
-            // 进来这里面就不返回对应的数据
-            return R.ok();
-        }
+        // if ((house == null || house.getUserId() != userId) && !isAdmin(sysUser)) {
+        //     // 进来这里面就不返回对应的数据
+        //     return R.ok();
+        // }
         return R.ok().data("item", house);
     }
 
