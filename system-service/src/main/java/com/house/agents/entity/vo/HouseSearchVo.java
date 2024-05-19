@@ -11,6 +11,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @Description:
@@ -38,6 +39,9 @@ public class HouseSearchVo {
 
     @ApiModelProperty(value = "地铁线路")
     private String subway;
+
+    @ApiModelProperty(value = "地铁线路")
+    private List<String> subways;
 
     @ApiModelProperty(value = "楼栋及房间号")
     private String roomNumber;

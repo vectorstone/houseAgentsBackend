@@ -8,6 +8,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.house.agents.Enum.FileContentTypeEnum;
 import com.house.agents.Enum.HouseStatusEnum;
 import com.house.agents.Enum.SearchFileTypeEnum;
 import com.house.agents.Enum.SearchHouseStatusEnum;
@@ -40,10 +42,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -78,7 +77,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
     @Override
     public List<House> getHouseInfoNoLogin() {
         List<House> houses = this.list(Wrappers.lambdaQuery(House.class).last("limit 0,8").orderByDesc(House::getUpdateTime));
-        setHouseAttachment(houses,null);
+        setHouseAttachment(houses, null);
         return houses;
     }
 
@@ -146,6 +145,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
             String landlordName = houseSearchVo.getLandlordName();
             int fileType = houseSearchVo.getFileType();
             int houseStatus = houseSearchVo.getHouseStatus();
+            List<String> subways = houseSearchVo.getSubways();
 
             // if (StringUtils.isNotEmpty(landlordName)){
 
@@ -164,6 +164,13 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
             if (StringUtils.isNotEmpty(community)) wrapper.like(House::getCommunity, community);
 
             if (StringUtils.isNotEmpty(subway)) wrapper.like(House::getSubway, subway);
+
+            if (CollectionUtils.isNotEmpty(subways)) {
+
+                // Preparing: SELECT id,user_id,community,subway,room_number,rent,orientation,keyOrPassword,remark,create_time,update_time,is_deleted AS deleted,houseStatus,landlordName FROM house WHERE is_deleted=0 AND ((subway LIKE ? OR subway LIKE ?)) ORDER BY update_time DESC LIMIT ?
+                // ==> Parameters: %巨峰路%(String), %杨高北路%(String), 10(Long)
+                wrapper.and(w -> Sets.newHashSet(subways).forEach(item -> w.or().like(House::getSubway, item)));
+            }
 
             if (StringUtils.isNotEmpty(roomNumber)) wrapper.like(House::getRoomNumber, roomNumber);
 
@@ -200,16 +207,16 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
             if (fileType != SearchFileTypeEnum.DEFAULT.getCode()) {
                 List<Long> houseIds = houseAttachmentMapper.getHouseId();
                 if (fileType == SearchFileTypeEnum.NOT_EMPTY.getCode()) {
-                    wrapper.in(House::getId,houseIds);
+                    wrapper.in(House::getId, houseIds);
                 } else if (fileType == SearchFileTypeEnum.EMPTY.getCode()) {
-                    wrapper.notIn(House::getId,houseIds);
+                    wrapper.notIn(House::getId, houseIds);
                 }
             }
             // 根据房子的状态来查询对应的数据
             if (houseStatus != SearchHouseStatusEnum.DEFAULT.getCode()) {
                 if (houseStatus == SearchHouseStatusEnum.HOUSE_UP.getCode()) {
                     wrapper.eq(House::getHouseStatus, HouseStatusEnum.HOUSE_UP.getCode());
-                } else if(houseStatus == SearchHouseStatusEnum.HOUSE_DOWN.getCode()) {
+                } else if (houseStatus == SearchHouseStatusEnum.HOUSE_DOWN.getCode()) {
                     wrapper.eq(House::getHouseStatus, HouseStatusEnum.HOUSE_DOWN.getCode());
                 }
             }
@@ -218,7 +225,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         wrapper.orderByDesc(House::getUpdateTime); // 将最新修改的房子置顶在前面
         Page<House> housePageData = this.page(housePage, wrapper);
         // 设置house的附件和房东的姓名的方法
-        setExtraAttributes(housePageData,sysUser);
+        setExtraAttributes(housePageData, sysUser);
 
         return housePageData;
     }
@@ -241,12 +248,12 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
      *
      * @param housePageData 分页的page对象
      */
-    private void setExtraAttributes(Page<House> housePageData,SysUser sysUser) {
+    private void setExtraAttributes(Page<House> housePageData, SysUser sysUser) {
         // sysUser前面已经校验过了,不可能为空了
         if (housePageData != null && CollectionUtils.isNotEmpty(housePageData.getRecords())) {
             // 如果查询出来的结果不为空的话,那么就设置对应的房子的附件进去
             List<House> houses = housePageData.getRecords();
-            setHouseAttachment(houses,sysUser);
+            setHouseAttachment(houses, sysUser);
             // if (fileType == SearchFileTypeEnum.DEFAULT.getCode()) {
             //     return;
             // }
@@ -277,7 +284,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
     }
 
     @Override
-    public void setHouseAttachment(List<House> houses,SysUser sysUser) {
+    public void setHouseAttachment(List<House> houses, SysUser sysUser) {
         HashMap<Long, CompletableFuture<List<HouseAttachment>>> houseAttachmentCfMap = Maps.newHashMap();
         // HashMap<Long, CompletableFuture<SysUser>> sysUserCfMap = Maps.newHashMap();
 
@@ -290,15 +297,8 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
                 }
 
                 CompletableFuture<List<HouseAttachment>> houseAttachmentCf = getAttachmentCf(house.getId());
-
-                // 查询房子所属的房东并设置进去
-                // CompletableFuture<SysUser> sysUserCf = CompletableFuture.supplyAsync(() -> sysUserService.getById(house.getUserId()), executorService);
-
                 houseAttachmentCfMap.put(house.getId(), houseAttachmentCf);
-                // sysUserCfMap.put(house.getId(),sysUserCf);
 
-                // house.setHouseAttachment(houseAttachmentCf.get());
-                // house.setLandlordName(sysUserCf.get().getName());
             } catch (Exception e) {
                 log.info(XMDLogFormat.build().putTag("interfaceName", "setExtraAttributes").message(e.getMessage()));
                 throw new RuntimeException(e);
@@ -308,8 +308,17 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         houses.forEach(house -> {
             Long houseId = house.getId();
             try {
-                house.setHouseAttachment(houseAttachmentCfMap.get(houseId).get());
-                // house.setLandlordName(sysUserCfMap.get(houseId).get().getName());
+                house.setHouseAttachment(FutureUtils.get(houseAttachmentCfMap.get(houseId)));
+                // 设置图片的首图
+                List<HouseAttachment> houseAttachments = house.getHouseAttachment();
+                Optional.ofNullable(houseAttachments)
+                        .orElse(Collections.emptyList())
+                        .stream()
+                        .filter(img -> img.getContentType() == FileContentTypeEnum.HOUSE_IMAGE.getCode())
+                        .findFirst()
+                        .ifPresent(img -> house.setHeadImage(img.getUrl()));
+
+
             } catch (Exception e) {
                 log.info(XMDLogFormat.build().putTag("interfaceName", "setExtraAttributes").message(e.getMessage()));
                 throw new RuntimeException(e);
@@ -396,7 +405,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         housePage.setSearchCount(true);
         housePage.setPages(pages);
         housePage.setRecords(deletedHousesWithPage);
-        setExtraAttributes(housePage,sysUser);
+        setExtraAttributes(housePage, sysUser);
         return housePage;
     }
 

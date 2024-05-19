@@ -95,4 +95,8 @@ public class House implements Serializable {
     // @TableField(exist = false)
     @TableField(value = "landlordName")
     private String landlordName;
+
+    @ApiModelProperty(value = "房子的首图")
+    @TableField(exist = false)
+    private String headImage;
 }
