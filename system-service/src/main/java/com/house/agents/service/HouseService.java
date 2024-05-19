@@ -3,6 +3,7 @@ package com.house.agents.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.house.agents.entity.House;
+import com.house.agents.entity.HouseAttachment;
 import com.house.agents.entity.SysUser;
 import com.house.agents.entity.vo.HouseSearchVo;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,6 +20,7 @@ import java.util.List;
  * @since 2023-07-28
  */
 public interface HouseService extends IService<House> {
+    List<HouseAttachment> getBannerList();
     List<House> getHouseInfoNoLogin();
 
     void importHouses(MultipartFile file, Long userId);

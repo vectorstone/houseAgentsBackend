@@ -137,6 +137,7 @@ public class WxLoginServiceImpl implements WxLoginService {
                 // 4.3设置用户的openId
                 sysUser.setOpenid(openId);
                 sysUser.setUsername(UUID.randomUUID().toString().replace("-", "").substring(0, 8));
+                sysUser.setName("用户"+sysUser.getUsername());
                 // 4.4保存用户信息
                 sysUserService.addUser(sysUser);
                 // sysUserService.save(sysUser);

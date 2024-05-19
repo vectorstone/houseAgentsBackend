@@ -53,7 +53,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     private RedisTemplate redisTemplate;
 
-    private final static List<String> WHITE_LIST = Lists.newArrayList("/admin/user/login","/admin/house/shareHouse","/admin/user/wxLogin","/admin/house/unLogin/houseInfo");
+    private final static List<String> WHITE_LIST = Lists.newArrayList("/admin/user/login","/admin/house/shareHouse","/admin/user/wxLogin","/admin/house/unLogin/houseInfo","/admin/house/banner");
 
     public TokenAuthenticationFilter(RedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;

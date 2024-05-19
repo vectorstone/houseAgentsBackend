@@ -63,6 +63,14 @@ public class HouseController {
     @Autowired
     private ShareEntityService shareEntityService;
 
+    // /admin/house/banner
+    @ApiOperation("未登录的时候随机获取一些轮播图的图片")
+    @GetMapping("/banner")
+    public R getBanner() {
+        List<HouseAttachment> bannerList = houseService.getBannerList();
+        return R.ok().data("bannerList", bannerList);
+    }
+
     // /admin/house/unLogin/houseInfo
     @ApiOperation("未登录的时候获取房源信息")
     @GetMapping("/unLogin/houseInfo")

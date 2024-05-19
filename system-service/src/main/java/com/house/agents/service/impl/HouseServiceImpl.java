@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.joda.time.DateTime;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -73,6 +75,31 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
 
     @Autowired
     private SysUserService sysUserService;
+
+    @Override
+    public List<HouseAttachment> getBannerList() {
+        List<HouseAttachment> images = houseAttachmentService.list(Wrappers.lambdaQuery(HouseAttachment.class).eq(HouseAttachment::getContentType, FileContentTypeEnum.HOUSE_IMAGE).last("limit 100"));
+        // 生成一个[a,b]范围的随机数的方式:(int)(Math.random() * (b - a + 1)+a)
+
+        // Set<Integer> indices = Sets.newHashSet();
+        // while (indices.size() <= 10) {
+        //     // 随机的从查询出来的图片里面获取10个下标
+        //     indices.add((int) (Math.random() * (99 + 1)));
+        // }
+        // List<HouseAttachment> sortedImages = Lists.newArrayList();
+        // indices.forEach(index -> sortedImages.add(images.get(index)));
+        // return sortedImages;
+        Random random = new Random();
+        Set<Integer> indices = IntStream.generate(() -> random.nextInt(100))
+                .distinct()
+                .limit(10)
+                .boxed()
+                .collect(Collectors.toSet());
+
+        return indices.stream()
+                .map(images::get)
+                .collect(Collectors.toList());
+    }
 
     @Override
     public List<House> getHouseInfoNoLogin() {
