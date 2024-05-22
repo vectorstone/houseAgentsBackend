@@ -240,6 +240,8 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
                 }
             }
             // 根据房子的状态来查询对应的数据
+            // 这个地方有个坑,数据库里面房子的状态0是上架,1是下架,前端里面传值的时候,如果不设置值,默认是0
+            // 所以前端传过来的房子状态的字段必须进行转换
             if (houseStatus != SearchHouseStatusEnum.DEFAULT.getCode()) {
                 if (houseStatus == SearchHouseStatusEnum.HOUSE_UP.getCode()) {
                     wrapper.eq(House::getHouseStatus, HouseStatusEnum.HOUSE_UP.getCode());
