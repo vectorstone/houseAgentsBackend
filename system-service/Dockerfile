@@ -20,4 +20,4 @@ WORKDIR /
 # 执行的命令会在工作路径下执行
 # 在这里不要使用nohup的命令,不然的话docker的控制台里面会没有对应的日志输出(虽然通过logback.xml里面配置的日志的输出的方式和路径会依然生效)
 #ENTRYPOINT ["nohup" , "java" , "-jar" , "system-service.jar",">springboot.log" ,"2>&1", "&"]
-ENTRYPOINT ["java" , "-jar" , "/system-service.jar"]
+ENTRYPOINT ["java" , "-jar" ,"-Dspring.profiles.active=prod", "/system-service.jar"]

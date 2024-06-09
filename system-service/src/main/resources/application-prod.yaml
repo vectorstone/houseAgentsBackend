@@ -20,7 +20,7 @@ spring:
 #    type: com.zaxxer.hikari.HikariDataSource
   # 配置文件的切换配置
   profiles:
-    active: dev
+    active: prod
   # 设置时间日期格式和时区的设置
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss

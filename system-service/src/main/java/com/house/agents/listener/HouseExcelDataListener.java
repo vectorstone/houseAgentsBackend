@@ -3,7 +3,9 @@ package com.house.agents.listener;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.read.listener.ReadListener;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.google.common.collect.Lists;
 import com.house.agents.entity.House;
 import com.house.agents.entity.vo.HouseVo;
 import com.house.agents.service.HouseService;
@@ -42,11 +44,11 @@ public class HouseExcelDataListener implements ReadListener<HouseVo> {
     public void invoke(HouseVo houseVo, AnalysisContext analysisContext) {
         //判断一下,数据库中是否已经有,了,如果有,就不添加到集合中,没有的话才添加到集合中
         //id唯一,编码唯一
-        if (isDuplicated(houseVo)){
-            //进来这里面,说明这个数据,数据库中已经有了,直接返回
-            log.info("提交的表格中有重复的内容,重复的内容为:{}",houseVo.toString());
-            return;
-        }
+        // if (isDuplicated(houseVo)){
+        //     //进来这里面,说明这个数据,数据库中已经有了,直接返回
+        //     log.info("提交的表格中有重复的内容,重复的内容为:{}",houseVo.toString());
+        //     return;
+        // }
         //代码能执行到这里面,说明没有重复的,可以继续添加
         //将读取到的数据添加到临时的集合中
         houseVos.add(houseVo);
@@ -94,22 +96,27 @@ public class HouseExcelDataListener implements ReadListener<HouseVo> {
 
     //将数据保存到数据库中的代码抽取出来,因为这个监听器中的两个方法都需要使用这部份逻辑代码
     private void batchSaveDictVos(){
-        //将dictVos转换成Dict,并保存到新的集合中,需要dictVos和Dict一一对应
+        // needUpdateHouses 这里面是需要更新的数据
+        List<House> needUpdateHouses = Lists.newArrayList();
+
+        // 这里面是需要新增的数据
         List<House> houses = houseVos.stream().map(item -> {
             //创建一个Dict对象,用来接收dictVos里面的属性等相关的内容
             House house = new House();
             //将dictVo的属性值设置给dict对象,将相同名称+相同类型的属性值,拷贝给另一个对象
             BeanUtils.copyProperties(item,house);
             house.setUserId(userId);//将用户的userId设置进去
-            //自动填充没生效,所以需要我们手动生成创建时间和更新时间
-            // house.setCreateTime(new Date());
-            //subcategory有可能为空,所以这里需要增加一个判断
-            //走到这里说明subcategory为空,那就继续保持为空好了
+            if (StringUtils.isNotBlank(item.getId())) {
+                // 说明房子的id是存在的
+                house.setId(Long.parseLong(item.getId()));
+                needUpdateHouses.add(house);
+            }
             return house;
 
-        }).collect(Collectors.toList());
+        }).filter(item -> item.getId() == null).collect(Collectors.toList());
         //执行批量保存
         houseService.saveBatch(houses);
+        houseService.updateBatchById(needUpdateHouses);
         //保存完成后,清空临时存放数据的集合里面的缓存
         houseVos.clear();
     }
