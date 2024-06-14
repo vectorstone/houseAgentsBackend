@@ -32,8 +32,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 
 /**
  * <p>
@@ -377,14 +375,184 @@ public class HouseController {
 
 
     @Deprecated
-    @PreAuthorize("hasAnyAuthority('bnt.house.list')")
+    // @PreAuthorize("hasAnyAuthority('bnt.house.list')")
     @ApiOperation(value = "获取地铁线路信息")
     @GetMapping("/subway")
     @LogAnnotation
     public R getSubway() {
         // Cat.logEvent("getSubway","getSubway");
-        List<Subway> list = subwayService.list();
-        return R.ok().data("items", list);
+        // List<Subway> list = subwayService.list();
+        return R.ok().data("subwayDetail", subwayDetail);
     }
+
+
+
+    private static final String subwayDetail = "[\n" +
+            "    {\n" +
+            "        \"text\": \"12号线\",\n" +
+            "        \"badge\": 3,\n" +
+            "        \"dot\": false,\n" +
+            "        \"disabled\": false,\n" +
+            "        \"children\": [\n" +
+            "            {\n" +
+            "                \"text\": \"东陆路\",\n" +
+            "                \"id\": 1,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"巨峰路\",\n" +
+            "                \"id\": 2,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"杨高北路\",\n" +
+            "                \"id\": 3,\n" +
+            "                \"disabled\": false\n" +
+            "            }\n" +
+            "        ]\n" +
+            "    },\n" +
+            "    {\n" +
+            "        \"text\": \"6号线\",\n" +
+            "        \"badge\": 3,\n" +
+            "        \"dot\": false,\n" +
+            "        \"disabled\": false,\n" +
+            "        \"children\": [\n" +
+            "            {\n" +
+            "                \"text\": \"东靖路\",\n" +
+            "                \"id\": 10,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"五洲大道\",\n" +
+            "                \"id\": 11,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"巨峰路\",\n" +
+            "                \"id\": 12,\n" +
+            "                \"disabled\": false\n" +
+            "            }\n" +
+            "        ]\n" +
+            "    },\n" +
+            "    {\n" +
+            "        \"text\": \"8号线\",\n" +
+            "        \"badge\": 3,\n" +
+            "        \"dot\": false,\n" +
+            "        \"disabled\": false,\n" +
+            "        \"children\": [\n" +
+            "            {\n" +
+            "                \"text\": \"市光路\",\n" +
+            "                \"id\": 20,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"嫩江路\",\n" +
+            "                \"id\": 21,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"翔殷路\",\n" +
+            "                \"id\": 22,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"黄兴公园\",\n" +
+            "                \"id\": 23,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"延吉中路\",\n" +
+            "                \"id\": 24,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"黄兴路\",\n" +
+            "                \"id\": 25,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"鞍山新村\",\n" +
+            "                \"id\": 26,\n" +
+            "                \"disabled\": false\n" +
+            "            }\n" +
+            "        ]\n" +
+            "    },\n" +
+            "    {\n" +
+            "        \"text\": \"9号线\",\n" +
+            "        \"badge\": 3,\n" +
+            "        \"dot\": false,\n" +
+            "        \"disabled\": false,\n" +
+            "        \"children\": [\n" +
+            "            {\n" +
+            "                \"text\": \"台儿庄路\",\n" +
+            "                \"id\": 30,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"金桥\",\n" +
+            "                \"id\": 31,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"蓝天路\",\n" +
+            "                \"id\": 32,\n" +
+            "                \"disabled\": false\n" +
+            "            }\n" +
+            "        ]\n" +
+            "    },\n" +
+            "    {\n" +
+            "        \"text\": \"10号线\",\n" +
+            "        \"badge\": 9,\n" +
+            "        \"dot\": false,\n" +
+            "        \"disabled\": false,\n" +
+            "        \"children\": [\n" +
+            "            {\n" +
+            "                \"text\": \"双江路\",\n" +
+            "                \"id\": 40,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"高桥\",\n" +
+            "                \"id\": 41,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"高桥西\",\n" +
+            "                \"id\": 42,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"殷高东路\",\n" +
+            "                \"id\": 43,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"五角场\",\n" +
+            "                \"id\": 44,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"江湾体育场\",\n" +
+            "                \"id\": 45,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"三门路\",\n" +
+            "                \"id\": 46,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"新江湾城\",\n" +
+            "                \"id\": 47,\n" +
+            "                \"disabled\": false\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"text\": \"国帆路\",\n" +
+            "                \"id\": 48,\n" +
+            "                \"disabled\": false\n" +
+            "            }\n" +
+            "        ]\n" +
+            "    }\n" +
+            "]";
 }
 

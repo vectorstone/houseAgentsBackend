@@ -3,13 +3,16 @@ package com.house.agents.security;
 import com.google.common.collect.Lists;
 import com.house.agents.entity.SysUser;
 import com.house.agents.utils.CookieUtils;
-import com.house.agents.utils.MutableHttpServletRequest;
 import com.house.agents.utils.Result;
 import com.house.agents.utils.ResultCodeEnum;
+import org.apache.catalina.connector.Request;
+import org.apache.catalina.connector.RequestFacade;
+import org.apache.tomcat.util.http.MimeHeaders;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -18,29 +21,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
-
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.UUID;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebFilter;
-import javax.servlet.http.HttpFilter;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.catalina.connector.Request;
-import org.apache.catalina.connector.RequestFacade;
-import org.apache.tomcat.util.http.MimeHeaders;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
-import org.springframework.util.ReflectionUtils;
 
 /**
  * <p>
@@ -53,7 +37,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     private RedisTemplate redisTemplate;
 
-    private final static List<String> WHITE_LIST = Lists.newArrayList("/admin/user/login","/admin/house/shareHouse","/admin/user/wxLogin","/admin/house/unLogin/houseInfo","/admin/house/banner");
+    private final static List<String> WHITE_LIST = Lists.newArrayList("/admin/house/subway","/admin/user/login","/admin/house/shareHouse","/admin/user/wxLogin","/admin/house/unLogin/houseInfo","/admin/house/banner");
 
     public TokenAuthenticationFilter(RedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;

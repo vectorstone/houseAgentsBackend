@@ -1,16 +1,15 @@
 package com.house.agents.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-
-import java.util.Date;
-import java.io.Serializable;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
 
 /**
  * <p>
@@ -67,6 +66,8 @@ public class SysUser implements Serializable {
     //设置自动填充的时机 指定新增时和更新时填充字段,我们这里新增的时候创建create和update时间
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date createTime;
+    // 这个按键的配置让我真的是有点用不习惯,为什么这个按键的设置是这个样子的,为什么不能是正常一点的按键的设置,这个fn的按键的位置为什么是在最右边的位置,为什么不能是在左边的位置
+    // 这样让我debug的时候怎么方便的进行debug,感觉是真的有点奇怪,但是这个键盘的按键的布局说实话还是比较的新颖的,最起码,没有明显的controller按键了,看着就比较的有意思
 
     @ApiModelProperty(value = "更新时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
