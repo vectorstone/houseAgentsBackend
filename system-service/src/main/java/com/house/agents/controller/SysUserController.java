@@ -1,8 +1,8 @@
 package com.house.agents.controller;
 
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.house.agents.annotation.LogAnnotation;
 import com.house.agents.entity.SysUser;
 import com.house.agents.entity.vo.LoginVo;
@@ -15,18 +15,13 @@ import com.house.agents.service.WxLoginService;
 import com.house.agents.utils.BusinessException;
 import com.house.agents.utils.MD5;
 import com.house.agents.utils.Result;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import org.springframework.data.redis.core.BoundValueOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
@@ -185,7 +180,7 @@ public class SysUserController {
         }
 
         String token = UUID.randomUUID().toString().replaceAll("-", "");
-        redisTemplate.boundValueOps(token).set(sysUser,2, TimeUnit.HOURS);
+        redisTemplate.boundValueOps(token).set(sysUser,24, TimeUnit.HOURS);
         // String token = JwtUtils.createToken(sysUser.getId(), sysUser.getUsername());
         //将生成的token返回给前端
         Map<String, Object> map = new HashMap<>();
