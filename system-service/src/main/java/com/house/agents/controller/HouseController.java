@@ -79,25 +79,15 @@ public class HouseController {
 
 
     // @PreAuthorize("hasAnyAuthority('bnt.house.list')")
+    // /admin/house/getHouseInfo
     @ApiOperation("获取房子的详细的情况")
-    @PostMapping("/{houseId}")
+    @PostMapping("/getHouseInfo")
     @LogAnnotation
-    public R getHouseInfo(@PathVariable("houseId") String houseId, @RequestHeader("token") String token) {
-        // excel也是只能上传自己的账单数据,不能上传别人的数据
-        SysUser sysUser = validUser(token);
-        Long userId = sysUser.getId();
+    public R getHouseInfo(@RequestParam("houseId") String houseId) {
         House house = houseService.getHouseInfo(houseId);
-        if (!isAdmin(sysUser)) {
-           // 如果不是管理员的身份的话, 那么就将house里面的房东的信息抹除
-            house.setRemark("");
-            house.setLandlordName("");
-            house.setKeyOrPassword("");
-        }
-        // Cat.logEvent("getHouseInfo","getHouseInfo");
-        // if ((house == null || house.getUserId() != userId) && !isAdmin(sysUser)) {
-        //     // 进来这里面就不返回对应的数据
-        //     return R.ok();
-        // }
+        house.setRemark("");
+        house.setLandlordName("");
+        house.setKeyOrPassword("");
         return R.ok().data("item", house);
     }
 

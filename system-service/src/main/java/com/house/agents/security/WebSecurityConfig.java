@@ -37,6 +37,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
                 .antMatchers("/admin/user/wxLogin").permitAll() // 微信小程序的登录的入口
                 .antMatchers("/admin/house/unLogin/houseInfo").permitAll() // 未登录的时候可以允许用户获取前10条数据
                 .antMatchers("/admin/house/subway").permitAll()
+                .antMatchers("/admin/house/getHouseInfo").permitAll()
                 //测试放行swagger的请求
                 .antMatchers("/doc.html").permitAll()
                 .antMatchers("/favicon.ico").permitAll()
