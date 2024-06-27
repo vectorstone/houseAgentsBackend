@@ -91,6 +91,24 @@ public class HouseController {
         return R.ok().data("item", house);
     }
 
+    @ApiOperation("获取房子的详细的情况")
+    @PostMapping("/{houseId}")
+    @LogAnnotation
+    public R getHouseInfo(@PathVariable("houseId") String houseId, @RequestHeader("token") String token) {
+
+        SysUser sysUser = validUser(token);
+        Long userId = sysUser.getId();
+        House house = houseService.getHouseInfo(houseId);
+        if (!isAdmin(sysUser)) {
+            // 如果不是管理员的身份的话, 那么就将house里面的房东的信息抹除
+            house.setRemark("");
+            house.setLandlordName("");
+            house.setKeyOrPassword("");
+        }
+
+        return R.ok().data("item", house);
+    }
+
     @PreAuthorize("hasAnyAuthority('bnt.house.password')")
     @ApiOperation("修改自己的密码")
     @PostMapping("/modifyPassword")

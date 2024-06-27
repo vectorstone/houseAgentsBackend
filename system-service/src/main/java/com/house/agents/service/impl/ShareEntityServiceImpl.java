@@ -3,14 +3,16 @@ package com.house.agents.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
-import com.house.agents.Enum.FileContentTypeEnum;
-import com.house.agents.Enum.SearchFileTypeEnum;
+import com.house.agents.Enum.HouseStatusEnum;
 import com.house.agents.entity.House;
 import com.house.agents.entity.ShareEntity;
 import com.house.agents.entity.ShareToHouse;
 import com.house.agents.mapper.ShareEntityMapper;
 import com.house.agents.result.ResponseEnum;
-import com.house.agents.service.*;
+import com.house.agents.service.HouseAttachmentService;
+import com.house.agents.service.HouseService;
+import com.house.agents.service.ShareEntityService;
+import com.house.agents.service.ShareToHouseService;
 import com.house.agents.utils.BusinessException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,14 +69,21 @@ public class ShareEntityServiceImpl extends ServiceImpl<ShareEntityMapper, Share
             return Lists.newArrayList();
         }
         List<House> houses = houseService.listByIds(houseIds);
+
+        if (CollectionUtils.isEmpty(houses)) {
+            return Lists.newArrayList();
+        }
+
+        List<House> afterFilterHouses = houses.stream().filter(Objects::nonNull).filter(house -> house.getHouseStatus() == HouseStatusEnum.HOUSE_UP.getCode()).collect(Collectors.toList());
+
         // 对于分享的房间来说默认传所有
-        houseService.setHouseAttachment(houses,null);
-        houses.forEach(house -> {
+        houseService.setHouseAttachment(afterFilterHouses,null);
+        afterFilterHouses.forEach(house -> {
             // 隐藏敏感信息
             house.setKeyOrPassword("");
             house.setRemark("");
         });
-        return houses;
+        return afterFilterHouses;
     }
 }
 
