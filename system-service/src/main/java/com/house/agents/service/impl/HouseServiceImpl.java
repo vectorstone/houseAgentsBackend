@@ -381,6 +381,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
     @Override
     public Page getDeletedPageList(Integer pageNum, Integer pageSize, HouseSearchVo houserSearchVo, SysUser sysUser) {
         Long userId = sysUser.getId();
+
         // 判断是否为管理员,如果是管理员的话,那么就将userId设置为0,这样sql里面查询的时候就会查询所有的数据
         List<Long> userIds = Lists.newArrayList();
         if (isAdmin(sysUser)) {
