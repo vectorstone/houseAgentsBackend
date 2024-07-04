@@ -34,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.joda.time.DateTime;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +47,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  * <p>
@@ -356,7 +354,7 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
     }
 
     private CompletableFuture<List<HouseAttachment>> getAttachmentCf(Long houseId) {
-        LambdaQueryWrapper<HouseAttachment> queryWrapper = Wrappers.lambdaQuery(HouseAttachment.class).eq(HouseAttachment::getHouseId, houseId);
+        LambdaQueryWrapper<HouseAttachment> queryWrapper = Wrappers.lambdaQuery(HouseAttachment.class).eq(HouseAttachment::getHouseId, houseId).orderByAsc(HouseAttachment::getContentType);
         // // 设置查询的条件,根据searchVo里面的fileType
         // if (fileType == SearchFileTypeEnum.IMAGE.getCode()) {
         //     queryWrapper.and(t -> t.eq(HouseAttachment::getContentType, FileContentTypeEnum.HOUSE_IMAGE));
