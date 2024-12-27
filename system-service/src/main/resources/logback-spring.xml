@@ -102,7 +102,7 @@
     </appender>
     <!-- 下面配置是否激活由application.yml中的spring.profiles.active的值决定 -->
     <!--开发环境-->
-    <springProfile name="dev">
+    <springProfile name="test">
         <!--可以灵活设置此处，从而控制日志的输出-->
         <root level="INFO"> <!--这个是info级别的日志的设置-->
         <!--<root level="DEBUG"> &lt;!&ndash;这个是debug级别的日志的设置&ndash;&gt;-->

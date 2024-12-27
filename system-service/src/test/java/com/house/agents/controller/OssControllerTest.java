@@ -1,6 +1,7 @@
 package com.house.agents.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.house.agents.entity.HouseAttachment;
 import com.house.agents.utils.HttpClientUtils;
 import org.junit.Test;
 
@@ -27,7 +28,15 @@ public class OssControllerTest {
         // 2.5将响应转为map集合
         Map<String,Object> map = JSON.parseObject(content, Map.class);
         System.out.println("map = " + map);
+    }
 
+    @Test
+    public void test1() throws IOException, ParseException {
+        System.out.println("true = " + true);
+        HouseAttachment houseAttachment = new HouseAttachment();
+        houseAttachment.setId(123L);
+        Long id = houseAttachment.getId();
+        System.out.println("id = " + id);
     }
 
 }
