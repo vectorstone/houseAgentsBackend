@@ -41,6 +41,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
                 //测试放行swagger的请求
                 .antMatchers("/doc.html").permitAll()
                 .antMatchers("/favicon.ico").permitAll()
+                .antMatchers("/wx").permitAll()
                 //这里的意思是其他的所有的接口需要认证才能访问
                 .anyRequest().authenticated()
                 .and()

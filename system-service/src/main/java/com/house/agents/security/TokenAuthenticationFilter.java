@@ -41,7 +41,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             "/admin/house/subway","/admin/user/login",
             "/admin/house/shareHouse","/admin/user/wxLogin",
             "/admin/house/unLogin/houseInfo","/admin/house/banner",
-            "/admin/house/getHouseInfo"
+            "/admin/house/getHouseInfo","/wx"
     );
 
     public TokenAuthenticationFilter(RedisTemplate redisTemplate) {
