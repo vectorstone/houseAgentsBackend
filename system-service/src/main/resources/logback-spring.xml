@@ -105,7 +105,7 @@
     <springProfile name="test">
         <!--可以灵活设置此处，从而控制日志的输出-->
         <root level="INFO"> <!--这个是info级别的日志的设置-->
-        <!--<root level="DEBUG"> &lt;!&ndash;这个是debug级别的日志的设置&ndash;&gt;-->
+<!--        <root level="DEBUG"> &lt;!&ndash;这个是debug级别的日志的设置&ndash;&gt;-->
             <appender-ref ref="CONSOLE" />
             <appender-ref ref="INFO_FILE" />
             <appender-ref ref="WARN_FILE" />
