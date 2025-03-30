@@ -62,7 +62,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
         web.ignoring().antMatchers("/favicon.ico","/swagger-resources/**",
                 "/webjars/**", "/v2/**", "/doc.html",
                 //注册的请求不拦截
-                "/admin/user/save","/api/oss/upload","/api/oss/userInfo/upload","/admin/house/banner");
+                "/admin/user/save","/api/oss/upload","/api/oss/userInfo/upload","/admin/house/banner","/wx");
     }
 
     // @Override
