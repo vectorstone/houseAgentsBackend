@@ -117,12 +117,6 @@ public class HouseController {
         // excel也是只能上传自己的账单数据,不能上传别人的数据
         SysUser sysUser = validUser(token);
         Long userId = sysUser.getId();
-        // House house = houseService.getById(houseId);
-        // Cat.logEvent("getHouseInfo","getHouseInfo");
-        // if ((house == null || house.getUserId() != userId) && !isAdmin(sysUser)) {
-        //     // 进来这里面就不返回对应的数据
-        //     return R.ok();
-        // }
         Asserts.AssertNotNull(myPasswordVo, ResponseEnum.PASSWORD_EMPTY);
         sysUserService.modifyPassword(userId,myPasswordVo,token);
         return R.ok();
@@ -166,23 +160,7 @@ public class HouseController {
 
         // 所有的账单的查询必须只能查询自己的,实现多用户的账单数据的隔离
         SysUser sysUser = validUser(token);
-        Long userId = sysUser.getId();
         Page page = houseService.getPageList(pageNum, pageSize, houseSearchVo, sysUser);
-
-        // Transaction t = Cat.newTransaction("URL", "pageName");
-        // try {
-        //     Cat.logEvent("test1","getList");
-        //     Cat.logEvent("URL1.Server", "serverIp", Event.SUCCESS, "ip=${serverIp}");
-        //     Cat.logMetricForCount("metric1.key");
-        //     Cat.logMetricForDuration("metric1.key", 5);
-        //
-        //     t.setStatus(Transaction.SUCCESS);
-        // } catch (Exception e) {
-        //     t.setStatus(e);
-        //     Cat.logError(e);
-        // } finally {
-        //     t.complete();
-        // }
 
 
         stopWatch.stop();
