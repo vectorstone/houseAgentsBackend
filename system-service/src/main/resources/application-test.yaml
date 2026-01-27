@@ -16,7 +16,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://192.168.6.141:3306/HousingAgents?serverTimezone=Asia/Shanghai&allowMultiQueries=true
     username: root
-    password: root
+    password: ${DB_PASSWORD:root}
   #    type: com.zaxxer.hikari.HikariDataSource
   # 配置文件的切换配置
   profiles:
@@ -29,8 +29,7 @@ spring:
     host: 192.168.6.141
     #    host: ${REMOTE_HOST}
     port: 6389
-    password: root
-#    password: ${REMOTE_REDIS_PASSWORD}
+    password: ${REDIS_PASSWORD:root}
 mybatis-plus:
   type-aliases-package: com.house.agents.entity
   configuration:
