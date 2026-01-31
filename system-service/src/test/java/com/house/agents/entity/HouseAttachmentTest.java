@@ -15,6 +15,7 @@ public class HouseAttachmentTest {
      * @throws IOException
      */
     @Test
+    @org.junit.Ignore("需要外部文件 D:\\test.mkv，跳过此测试")
     public void test() throws IOException {
         // 测试一下nio
         long st = System.currentTimeMillis();
@@ -37,6 +38,7 @@ public class HouseAttachmentTest {
      * @throws IOException
      */
     @Test
+    @org.junit.Ignore("需要外部文件 D:\\test.mkv，跳过此测试")
     public void test2() throws IOException {
         // 测试一下nio
         long st = System.currentTimeMillis();
@@ -74,6 +76,7 @@ public class HouseAttachmentTest {
      * @throws IOException
      */
     @Test
+    @org.junit.Ignore("需要外部文件 D:\\test.mkv，跳过此测试")
     public void test1() throws IOException {
         long st = System.currentTimeMillis();
         File file = new File("D:\\test.mkv");

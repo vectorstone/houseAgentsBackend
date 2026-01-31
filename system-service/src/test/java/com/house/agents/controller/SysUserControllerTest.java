@@ -19,6 +19,7 @@ import static org.junit.Assert.*;
 
 public class SysUserControllerTest {
     @Test
+    @org.junit.Ignore("需要外部文件 E:\\OneDrive\\AtGuiGu\\JavaDevelop\\houseAgents\\nodes.txt，跳过此测试")
     public void test() throws IOException {
         // System.out.println(originBase);
         // String[] split = originBase.split("240601");
