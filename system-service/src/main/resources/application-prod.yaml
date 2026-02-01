@@ -45,7 +45,7 @@ mybatis-plus:
 
 jasypt:
   encryptor:
-    password: ${JASYPT_ENCRYPTOR_PASSWORD}
+    password: ${JASYPT_PASS}
 #    iv-generator-classname: org.jasypt.iv.NoIvGenerator
 #    iv-generator-classname: org.jasypt.iv.RandomIvGenerator
 #    algorithm: PBEWITHHMACSHA512ANDAES_256
