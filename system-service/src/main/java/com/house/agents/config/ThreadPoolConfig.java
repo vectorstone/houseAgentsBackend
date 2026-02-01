@@ -1,24 +1,32 @@
 package com.house.agents.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
 
+/**
+ * Thread pool configuration using JDK 21 Virtual Threads.
+ * Virtual threads provide better performance and scalability compared to traditional platform threads.
+ * They are lightweight and can handle millions of concurrent operations without blocking platform threads.
+ */
 @Configuration
 public class ThreadPoolConfig {  
+    
+    /**
+     * Creates an ExecutorService using virtual threads (JDK 21+ feature).
+     * Virtual threads are much more lightweight than platform threads and can handle
+     * high concurrency scenarios more efficiently.
+     * 
+     * This replaces the traditional ThreadPoolExecutor to leverage JDK 21's coroutine capabilities.
+     * 
+     * @return ExecutorService backed by virtual threads
+     */
     @Bean
-    public ExecutorService executorService(
-            @Value("${threadPool.corePoolSize}") Integer corePoolSize,
-            @Value("${threadPool.maximumPoolSize}") Integer maximumPoolSize,  
-            @Value("${threadPool.keepAliveTime}") Integer keepAliveTime,  
-            @Value("${threadPool.workQueueSize}") Integer workQueueSize  
-    ){  
-        return new ThreadPoolExecutor(corePoolSize,maximumPoolSize,keepAliveTime,
-                TimeUnit.SECONDS,new ArrayBlockingQueue<>(workQueueSize));
+    public ExecutorService executorService() {  
+        // Use virtual threads for better async performance
+        // Virtual threads are created on-demand and don't require pre-configured pool sizes
+        return Executors.newVirtualThreadPerTaskExecutor();
     }  
 }
