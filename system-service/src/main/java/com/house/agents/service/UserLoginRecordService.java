@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.house.agents.entity.SysUser;
 import com.house.agents.entity.UserLoginRecord;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 public interface UserLoginRecordService extends IService<UserLoginRecord> {

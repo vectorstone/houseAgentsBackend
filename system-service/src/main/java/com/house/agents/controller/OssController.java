@@ -2,15 +2,15 @@ package com.house.agents.controller;
 
 import com.house.agents.result.R;
 import com.house.agents.service.OssService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * @Description:
@@ -19,13 +19,13 @@ import javax.servlet.http.HttpServletResponse;
  */
 @RestController
 @RequestMapping("/api/oss")
-@Api(tags = "oss文件管理模块")
+@Tag(name = "oss文件管理模块")
 public class OssController {
     @Autowired
     OssService ossService;
 
     // /api/oss/userInfo/upload
-    @ApiOperation("用户头像上传")
+    @Operation(summary = "用户头像上传")
     @PostMapping("/userInfo/upload")
     public R uploadAvatar(MultipartFile file,
                      HttpServletRequest request, HttpServletResponse response) {
@@ -37,7 +37,7 @@ public class OssController {
     // requestParam方式传文件的方法
     // @PreAuthorize("hasAnyAuthority('bnt.house.attachmentUpload')")
     @PostMapping("/upload")
-    @ApiOperation("文件上传requestParam的方式")
+    @Operation(summary = "文件上传requestParam的方式")
     public R upload(MultipartFile file,
                     @RequestParam("houseId") String houseId, HttpServletRequest request, HttpServletResponse response) {
         // file指的是需要上传的文件的对象
@@ -51,7 +51,7 @@ public class OssController {
 
     // 删除文件的方法 这个接口理论上来说要鉴权
     // @PreAuthorize("hasAnyAuthority('bnt.house.remove')")
-    @ApiOperation("删除文件")
+    @Operation(summary = "删除文件")
     @DeleteMapping
     public R deleteFile(@RequestParam("path") String path,@RequestHeader("token") String token) {
         ossService.deleteByPath(path,token);

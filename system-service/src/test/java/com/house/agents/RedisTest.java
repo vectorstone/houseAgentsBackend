@@ -1,10 +1,11 @@
 package com.house.agents;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -13,6 +14,7 @@ import java.util.concurrent.TimeUnit;
  * @Date: 8/5/2023 1:45 PM
  */
 @SpringBootTest
+@Disabled("需要 Redis 服务器，跳过此测试")
 public class RedisTest {
     @Resource
     RedisTemplate redisTemplate;

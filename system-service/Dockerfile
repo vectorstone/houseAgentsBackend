@@ -1,5 +1,5 @@
 # 基础镜像,必须存在
-FROM openjdk:8u312-jdk-oracle
+FROM eclipse-temurin:21-jdk
 # 作者信息
 MAINTAINER gavin
 #系统编码

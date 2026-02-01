@@ -4,12 +4,12 @@ package com.house.agents.controller;
 import com.house.agents.entity.vo.AssignRoleVo;
 import com.house.agents.result.R;
 import com.house.agents.service.SysRoleService;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Map;
 
 /**
@@ -28,10 +28,10 @@ public class SysRoleController {
     SysRoleService sysRoleService;
     //查询用户当前的角色和所有的角色列表
     @PreAuthorize("hasAnyAuthority('bnt.sysUser.assignRole')")
-    @ApiOperation("加载角色列表(包括所有的角色和当前用户拥有的角色id)")
+    @Operation(summary = "加载角色列表(包括所有的角色和当前用户拥有的角色id)")
     @GetMapping("/toAssign/{userId}")
     public R getAssign(
-            @ApiParam(name = "userId",value = "用户id",required = true)
+            @Parameter(description = "用户id",required = true)
             @PathVariable String userId
     ){
         Map<String,Object> userRolesMap = sysRoleService.getRolesByUserId(userId);
@@ -39,10 +39,10 @@ public class SysRoleController {
     }
     //给用户重新分配角色
     @PreAuthorize("hasAnyAuthority('bnt.sysUser.assignRole')")
-    @ApiOperation("更新用户角色")
+    @Operation(summary = "更新用户角色")
     @PutMapping("/doAssign")
     public R doAssign(
-            @ApiParam(name = "assignRoleVo",value = "用户更新的角色信息",required = true)
+            @Parameter(description = "用户更新的角色信息",required = true)
             @RequestBody AssignRoleVo assignRoleVo
     ){
         sysRoleService.doAssign(assignRoleVo);

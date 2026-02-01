@@ -5,7 +5,7 @@
 // import org.springframework.security.crypto.password.PasswordEncoder;
 // import org.springframework.stereotype.Component;
 //
-// import javax.annotation.Resource;
+// import jakarta.annotation.Resource;
 //
 // @Component
 // public class CustomMd5PasswordEncoder implements PasswordEncoder {

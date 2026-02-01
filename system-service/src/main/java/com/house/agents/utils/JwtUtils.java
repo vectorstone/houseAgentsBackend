@@ -6,8 +6,9 @@ import org.springframework.util.StringUtils;
 
 
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 
 public class JwtUtils {
@@ -15,7 +16,7 @@ public class JwtUtils {
     private static long tokenExpiration = 7*24*60*60*1000;
     private static String tokenSignKey = "A1t2g3uigu123456";
 
-    private static Key getKeyInstance(){
+    private static SecretKey getKeyInstance(){
         SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
         byte[] bytes = DatatypeConverter.parseBase64Binary(tokenSignKey);
         return new SecretKeySpec(bytes,signatureAlgorithm.getJcaName());
@@ -23,12 +24,11 @@ public class JwtUtils {
 
     public static String createToken(Long userId, String userName) {
         String token = Jwts.builder()
-                .setSubject("SRB-USER")
-                .setExpiration(new Date(System.currentTimeMillis() + tokenExpiration))
+                .subject("SRB-USER")
+                .expiration(new Date(System.currentTimeMillis() + tokenExpiration))
                 .claim("userId", userId)
                 .claim("userName", userName)
-                .signWith(SignatureAlgorithm.HS512, getKeyInstance())
-                .compressWith(CompressionCodecs.GZIP)
+                .signWith(getKeyInstance())
                 .compact();
         return token;
     }
@@ -43,7 +43,7 @@ public class JwtUtils {
             return false;
         }
         try {
-            Jwts.parser().setSigningKey(getKeyInstance()).parseClaimsJws(token);
+            Jwts.parser().verifyWith(getKeyInstance()).build().parseSignedClaims(token);
             return true;
         } catch (Exception e) {
             return false;
@@ -77,8 +77,8 @@ public class JwtUtils {
             throw new BusinessException(ResponseEnum.LOGIN_AUTH_ERROR);
         }
         try {
-            Jws<Claims> claimsJws = Jwts.parser().setSigningKey(getKeyInstance()).parseClaimsJws(token);
-            Claims claims = claimsJws.getBody();
+            Jws<Claims> claimsJws = Jwts.parser().verifyWith(getKeyInstance()).build().parseSignedClaims(token);
+            Claims claims = claimsJws.getPayload();
             return claims;
         } catch (Exception e) {
             throw new BusinessException(ResponseEnum.LOGIN_AUTH_ERROR);

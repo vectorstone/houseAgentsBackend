@@ -1,13 +1,13 @@
 package com.house.agents.security;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * @Description:
@@ -15,61 +15,47 @@ import org.springframework.security.config.http.SessionCreationPolicy;
  * @Date: 6/14/2023 8:24 PM
  */
 @Configuration
-@EnableWebSecurity//@EnableWebSecurity是开启SpringSecurity的默认行为
-@EnableGlobalMethodSecurity(prePostEnabled = true)//开启注解功能，默认禁用注解
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
+@EnableWebSecurity
+@EnableMethodSecurity
+public class WebSecurityConfig {
     @Autowired
     private RedisTemplate redisTemplate;
 
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        //这是配置的关键,决定哪些接口开启防护,哪些接口绕过防护
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 //关闭csrf
-                .csrf().disable()
+                .csrf(csrf -> csrf.disable())
                 //开启跨域以便前端调用接口
-                .cors().and()
-                .authorizeRequests()
-                //指定某些接口不需要通过验证即可访问,登录接口不需要认证
-                .antMatchers("/admin/user/login").permitAll()
-                .antMatchers("/admin/house/shareHouse").permitAll()
-                .antMatchers("/admin/user/wxLogin").permitAll() // 微信小程序的登录的入口
-                .antMatchers("/admin/house/unLogin/houseInfo").permitAll() // 未登录的时候可以允许用户获取前10条数据
-                .antMatchers("/admin/house/subway").permitAll()
-                .antMatchers("/admin/house/getHouseInfo").permitAll()
-                //测试放行swagger的请求
-                .antMatchers("/doc.html").permitAll()
-                .antMatchers("/favicon.ico").permitAll()
-                .antMatchers("/wx").permitAll()
-                //这里的意思是其他的所有的接口需要认证才能访问
-                .anyRequest().authenticated()
-                .and()
+                .cors(cors -> cors.and())
+                .authorizeHttpRequests(auth -> auth
+                        //指定某些接口不需要通过验证即可访问,登录接口不需要认证
+                        .requestMatchers("/admin/user/login").permitAll()
+                        .requestMatchers("/admin/house/shareHouse").permitAll()
+                        .requestMatchers("/admin/user/wxLogin").permitAll() // 微信小程序的登录的入口
+                        .requestMatchers("/admin/house/unLogin/houseInfo").permitAll() // 未登录的时候可以允许用户获取前10条数据
+                        .requestMatchers("/admin/house/subway").permitAll()
+                        .requestMatchers("/admin/house/getHouseInfo").permitAll()
+                        //健康检查接口
+                        .requestMatchers("/monitor/**").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
+                        //Swagger UI (SpringDoc OpenAPI)
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/swagger-ui.html").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/v3/api-docs").permitAll()
+                        .requestMatchers("/swagger-resources/**").permitAll()
+                        .requestMatchers("/webjars/**").permitAll()
+                        .requestMatchers("/doc.html").permitAll()
+                        .requestMatchers("/favicon.ico").permitAll()
+                        .requestMatchers("/wx/**").permitAll()
+                        //这里的意思是其他的所有的接口需要认证才能访问
+                        .anyRequest().authenticated()
+                )
                 .addFilterBefore(new TokenAuthenticationFilter(redisTemplate), TokenLoginFilter.class)
-                // .addFilter(tokenAuthenticationFilter);
-                .addFilter(new TokenLoginFilter(authenticationManager(),redisTemplate));
+                .addFilter(new TokenLoginFilter(http.getSharedObject(org.springframework.security.authentication.AuthenticationManager.class), redisTemplate));
         //禁用session
-        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        return http.build();
     }
-    /**
-     * 配置哪些请求不拦截
-     * 排除swagger相关请求
-     * @param web
-     * @throws Exception
-     */
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/favicon.ico","/swagger-resources/**",
-                "/webjars/**", "/v2/**", "/doc.html",
-                //注册的请求不拦截
-                "/admin/user/save","/api/oss/upload","/api/oss/userInfo/upload","/admin/house/banner","/wx");
-    }
-
-    // @Override
-    // public void configure(WebSecurity web) throws Exception {
-    //     web.ignoring().antMatchers("/favicon.ico","/swagger-resources/**",
-    //             "/webjars/**", "/v2/**", "/doc.html"
-    //             ,"/api/oss/upload","/admin/system/sysUser","/admin/system/image/**",
-    //             "/admin/system/submit/status");
-    // }
 }
