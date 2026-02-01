@@ -5,9 +5,9 @@ import com.house.agents.entity.SysMenu;
 import com.house.agents.entity.vo.AssignMenuVo;
 import com.house.agents.service.SysMenuService;
 import com.house.agents.utils.Result;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +23,7 @@ import java.util.List;
  * @author Gavin
  * @since 2023-08-03
  */
-@Api(tags = "菜单管理模块")
+@Tag(name = "菜单管理模块")
 @RestController
 @RequestMapping("/admin/system/sysMenu")
 @Transactional
@@ -33,7 +33,7 @@ public class SysMenuController {
 
     @PreAuthorize("hasAnyAuthority('bnt.sysMenu.list')")
     @GetMapping("")
-    @ApiOperation("获取菜单")
+    @Operation(summary = "获取菜单")
     public Result<List<SysMenu>> getMenusList(){
         return Result.ok(sysMenuService.findNodes());
     }
@@ -42,9 +42,9 @@ public class SysMenuController {
     @PreAuthorize("hasAnyAuthority('bnt.sysMenu.list')")
     // @PreAuthorize("hasAnyAuthority('bnt.sysMenu.update')")
     @GetMapping("/getById/{id}")
-    @ApiOperation("根据id查询菜单")
+    @Operation(summary = "根据id查询菜单")
     public Result<SysMenu> getById(
-            @ApiParam(name = "id",value = "菜单id",required = true)
+            @Parameter(description = "菜单id",required = true)
             @PathVariable("id") Long id
     ){
         SysMenu byId = sysMenuService.getById(id);
@@ -54,9 +54,9 @@ public class SysMenuController {
     //增加菜单
     @PreAuthorize("hasAnyAuthority('bnt.sysMenu.add')")
     @PostMapping("")
-    @ApiOperation("增加菜单")
+    @Operation(summary = "增加菜单")
     public Result save(
-            @ApiParam(name = "permission",value = "需要增加的菜单对象",required = true)
+            @Parameter(description = "需要增加的菜单对象",required = true)
             @RequestBody SysMenu permission
     ){
         sysMenuService.save(permission);
@@ -66,9 +66,9 @@ public class SysMenuController {
     //修改菜单
     @PreAuthorize("hasAnyAuthority('bnt.sysMenu.update')")
     @PutMapping("")
-    @ApiOperation("修改菜单")
+    @Operation(summary = "修改菜单")
     public Result update(
-            @ApiParam(name = "permission",value = "需要修改的菜单",required = true)
+            @Parameter(description = "需要修改的菜单",required = true)
             @RequestBody SysMenu permission
     ){
         sysMenuService.updateById(permission);
@@ -78,9 +78,9 @@ public class SysMenuController {
     //根据id删除菜单
     @PreAuthorize("hasAnyAuthority('bnt.sysMenu.remove')")
     @DeleteMapping("/{id}")
-    @ApiOperation("根据id删除菜单")
+    @Operation(summary = "根据id删除菜单")
     public Result deleteMenu(
-            @ApiParam(name = "id",value = "需要删除的菜单的id",required = true)
+            @Parameter(description = "需要删除的菜单的id",required = true)
             @PathVariable("id") Long id
     ){
         sysMenuService.removeMenuById(id);
@@ -90,9 +90,9 @@ public class SysMenuController {
     //根据角色获取菜单
     @PreAuthorize("hasAnyAuthority('bnt.sysRole.assignAuth')")
     @GetMapping("/toAssign/{roleId}")
-    @ApiOperation("根据角色id获取菜单")
+    @Operation(summary = "根据角色id获取菜单")
     public Result<List<SysMenu>> toAssign(
-            @ApiParam(name = "roleId",value = "角色id",required = true)
+            @Parameter(description = "角色id",required = true)
             @PathVariable("roleId") Long roleId
     ){
         List<SysMenu> sysMenuList = sysMenuService.findSysMenuByRoleId(roleId);
@@ -102,10 +102,10 @@ public class SysMenuController {
 
     //给角色分配菜单
     @PreAuthorize("hasAnyAuthority('bnt.sysRole.assignAuth')")
-    @ApiOperation("给角色分配菜单")
+    @Operation(summary = "给角色分配菜单")
     @PostMapping("/doAssign")
     public Result doAssign(
-            @ApiParam(name = "assignMenuVo",value = "菜单分配的角色信息对象",required = true)
+            @Parameter(description = "菜单分配的角色信息对象",required = true)
             @RequestBody AssignMenuVo assignMenuVo)
     {
         sysMenuService.doAssign(assignMenuVo);

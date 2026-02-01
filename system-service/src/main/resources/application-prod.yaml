@@ -19,8 +19,8 @@ spring:
     password: ENC(Hj0RcjFmH1rZXMFMcL8zkAGL9tq4Owv5YX4cwtbCs4p3PWRq+9ftrpCF8NYJaKT8)
 #    type: com.zaxxer.hikari.HikariDataSource
   # 配置文件的切换配置
-  profiles:
-    active: prod
+  # profiles:
+  #   active: prod
   # 设置时间日期格式和时区的设置
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss

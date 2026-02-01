@@ -11,7 +11,7 @@ import com.house.agents.utils.IpUtils;
 import org.apache.velocity.util.ArrayListWrapper;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**

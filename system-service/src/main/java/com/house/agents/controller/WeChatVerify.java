@@ -3,15 +3,15 @@ package com.house.agents.controller;
 import com.alibaba.excel.util.StringUtils;
 import com.house.agents.result.R;
 import com.house.agents.service.OssService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -25,10 +25,10 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/wx")
-@Api(tags = "微信公众号平台服务器验证")
+@Tag(name = "微信公众号平台服务器验证")
 public class WeChatVerify {
 
-    @ApiOperation("微信公众号平台服务器验证")
+    @Operation(summary = "微信公众号平台服务器验证")
     @GetMapping("")
     public String verifyInformationFromWeChat(
             @RequestParam("signature") String signature,

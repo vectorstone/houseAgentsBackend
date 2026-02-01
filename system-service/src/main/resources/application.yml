@@ -1,0 +1,14 @@
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:test}
+  main:
+    banner-mode: off
+
+jasypt:
+  encryptor:
+    password: test
+
+logging:
+  level:
+    org.springframework.boot.autoconfigure: INFO
+    org.springframework.context.annotation: WARN

@@ -1,6 +1,6 @@
 package com.house.agents.entity.vo;
 
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -14,7 +14,7 @@ import java.math.BigDecimal;
  * 2023-05   4888.01
  * 2023-04   6119.79
  */
-@ApiModel("用来接收数据库查询出来的月份和每月支出的数据模型")
+@Schema(description = "用来接收数据库查询出来的月份和每月支出的数据模型")
 @Data
 public class MonthCostVo {
     private String cdate;

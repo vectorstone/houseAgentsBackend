@@ -18,8 +18,8 @@ import com.house.agents.service.SysUserService;
 import com.house.agents.utils.Asserts;
 import com.house.agents.utils.BusinessException;
 import com.house.agents.utils.CookieUtils;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +29,8 @@ import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -43,7 +43,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/admin/house")
-@Api(tags = "待出租房模块")
+@Tag(name = "待出租房模块")
 @CrossOrigin
 @Slf4j
 public class HouseController {
@@ -62,7 +62,7 @@ public class HouseController {
     private ShareEntityService shareEntityService;
 
     // /admin/house/banner
-    @ApiOperation("未登录的时候随机获取一些轮播图的图片")
+    @Operation(summary = "未登录的时候随机获取一些轮播图的图片")
     @GetMapping("/banner")
     public R getBanner() {
         List<HouseAttachment> bannerList = houseService.getBannerList();
@@ -70,7 +70,7 @@ public class HouseController {
     }
 
     // /admin/house/unLogin/houseInfo
-    @ApiOperation("未登录的时候获取房源信息")
+    @Operation(summary = "未登录的时候获取房源信息")
     @GetMapping("/unLogin/houseInfo")
     public R getHouseInfoUnLogin() {
         List<House> houseInfoNoLogin = houseService.getHouseInfoNoLogin();
@@ -80,7 +80,7 @@ public class HouseController {
 
     // @PreAuthorize("hasAnyAuthority('bnt.house.list')")
     // /admin/house/getHouseInfo
-    @ApiOperation("获取房子的详细的情况")
+    @Operation(summary = "获取房子的详细的情况")
     @PostMapping("/getHouseInfo")
     @LogAnnotation
     public R getHouseInfo(@RequestParam("houseId") String houseId) {
@@ -91,7 +91,7 @@ public class HouseController {
         return R.ok().data("item", house);
     }
 
-    @ApiOperation("获取房子的详细的情况")
+    @Operation(summary = "获取房子的详细的情况")
     @PostMapping("/{houseId}")
     @LogAnnotation
     public R getHouseInfo(@PathVariable("houseId") String houseId, @RequestHeader("token") String token) {
@@ -110,7 +110,7 @@ public class HouseController {
     }
 
     @PreAuthorize("hasAnyAuthority('bnt.house.password')")
-    @ApiOperation("修改自己的密码")
+    @Operation(summary = "修改自己的密码")
     @PostMapping("/modifyPassword")
     @LogAnnotation
     public R modifyPassword(@RequestBody MyPasswordVo myPasswordVo , @RequestHeader("token") String token) {
@@ -130,7 +130,7 @@ public class HouseController {
     }
 
     @PreAuthorize("hasAnyAuthority('bnt.house.excelUpload')")
-    @ApiOperation("待出租房excel表格的上传功能")
+    @Operation(summary = "待出租房excel表格的上传功能")
     @PostMapping("/import")
     @LogAnnotation
     public R importHouse(HttpServletRequest request, @RequestParam("file") MultipartFile file, @RequestHeader(required = false, name = "token") String token) {
@@ -147,7 +147,7 @@ public class HouseController {
 
     @LogAnnotation
     // @PreAuthorize("hasAnyAuthority('bnt.house.list')")
-    @ApiOperation("分页查询")
+    @Operation(summary = "分页查询")
     @PostMapping("/{pageNum}/{pageSize}")
     public R getList(/* @RequestParam(value = "searchVo",required = false) SearchVo searchVo */
             @RequestBody HouseSearchVo houseSearchVo,
@@ -170,7 +170,7 @@ public class HouseController {
 
     @Deprecated
     @PreAuthorize("hasAnyAuthority('bnt.house.list')")
-    @ApiOperation("分页查询已经下架了的房子信息")
+    @Operation(summary = "分页查询已经下架了的房子信息")
     @PostMapping("/deleted/{pageNum}/{pageSize}")
     @LogAnnotation
     public R getDeletedList(/* @RequestParam(value = "searchVo",required = false) SearchVo searchVo */
@@ -190,7 +190,7 @@ public class HouseController {
     }
 
     @PreAuthorize("hasAnyAuthority('bnt.house.excelDownload')")
-    @ApiOperation("房子信息导出为excel")
+    @Operation(summary = "房子信息导出为excel")
     @GetMapping("/export")
     @LogAnnotation
     // 这个地方不能有返回值,否则会覆盖服务器给前端的response响应
@@ -206,7 +206,7 @@ public class HouseController {
     }
 
     @PreAuthorize("hasAnyAuthority('bnt.house.remove')")
-    @ApiOperation("根据id下架或者上架房子")
+    @Operation(summary = "根据id下架或者上架房子")
     @DeleteMapping("/{id}")
     @LogAnnotation
     public R removeById(@PathVariable("id") String id, @RequestHeader("token") String token) {
@@ -245,7 +245,7 @@ public class HouseController {
 
     @Deprecated
     @PreAuthorize("hasAnyAuthority('bnt.house.update')")
-    @ApiOperation("重新上架房子")
+    @Operation(summary = "重新上架房子")
     @PutMapping("/{houseId}")
     @LogAnnotation
     public R rePublishHouse(@PathVariable("houseId") String houseId, @RequestHeader("token") String token) {
@@ -262,7 +262,7 @@ public class HouseController {
     }
 
     @PreAuthorize("hasAnyAuthority('bnt.house.update')")
-    @ApiOperation("根据id修改房子信息")
+    @Operation(summary = "根据id修改房子信息")
     @PutMapping
     @LogAnnotation
     public R updateById(@RequestBody House house, @RequestHeader("token") String token) {
@@ -278,7 +278,7 @@ public class HouseController {
     }
 
     @PreAuthorize("hasAnyAuthority('bnt.house.add')")
-    @ApiOperation("新增房子信息")
+    @Operation(summary = "新增房子信息")
     @PostMapping
     @LogAnnotation
     public R save(@RequestBody House house, @RequestHeader("token") String token) {
@@ -292,7 +292,7 @@ public class HouseController {
 
     @Deprecated
     @PreAuthorize("hasAnyAuthority('bnt.house.remove')")
-    @ApiOperation("批量删除")
+    @Operation(summary = "批量删除")
     @DeleteMapping()
     @LogAnnotation
     public R batchRemoveByIds(@RequestBody List<String> houseIds, @RequestHeader("token") String token) {
@@ -313,7 +313,7 @@ public class HouseController {
     }
 
     // @PreAuthorize("hasAnyAuthority('bnt.house.share')")
-    @ApiOperation("批量查询分享的房子")
+    @Operation(summary = "批量查询分享的房子")
     @GetMapping("/shareHouse")
     @LogAnnotation
     public R batchGetShareHousesByShareId(@RequestParam("shareId") String shareId) {
@@ -322,7 +322,7 @@ public class HouseController {
     }
 
     @PreAuthorize("hasAnyAuthority('bnt.house.share')")
-    @ApiOperation("批量分享")
+    @Operation(summary = "批量分享")
     @PostMapping("/share")
     @LogAnnotation
     public R batchShareByIds(@RequestBody List<String> houseIds, @RequestHeader("token") String token) {
@@ -339,7 +339,7 @@ public class HouseController {
 
     @Deprecated
     @PreAuthorize("hasAnyAuthority('bnt.house.update')")
-    @ApiOperation("批量重新上架")
+    @Operation(summary = "批量重新上架")
     @PutMapping("/batch/republish")
     @LogAnnotation
     public R batchRepublishByIds(@RequestBody List<String> houseIds, @RequestHeader("token") String token) {
@@ -362,7 +362,7 @@ public class HouseController {
 
     @Deprecated
     // @PreAuthorize("hasAnyAuthority('bnt.house.list')")
-    @ApiOperation(value = "获取地铁线路信息")
+    @Operation(summary = "获取地铁线路信息")
     @GetMapping("/subway")
     @LogAnnotation
     public R getSubway() {

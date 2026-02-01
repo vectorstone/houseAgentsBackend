@@ -16,10 +16,10 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -41,7 +41,9 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             "/admin/house/subway","/admin/user/login",
             "/admin/house/shareHouse","/admin/user/wxLogin",
             "/admin/house/unLogin/houseInfo","/admin/house/banner",
-            "/admin/house/getHouseInfo","/wx"
+            "/admin/house/getHouseInfo","/wx",
+            "/monitor/","/actuator/",
+            "/swagger-ui/","/v3/api-docs/","/doc.html","/v3/api-docs"
     );
 
     public TokenAuthenticationFilter(RedisTemplate redisTemplate) {
@@ -62,7 +64,18 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
         //如果是登录的接口或者是批量分享房源的接口或者是微信登录的接口，直接放行
         // /unLogin/houseInfo
-        if (WHITE_LIST.stream().anyMatch(t -> t.equals(requestURI))) {
+        // 检查白名单：精确匹配或前缀匹配
+        boolean isWhitelisted = WHITE_LIST.stream().anyMatch(t -> {
+            if (t.endsWith("/")) {
+                // 如果白名单项以/结尾，进行前缀匹配
+                return requestURI.startsWith(t);
+            } else {
+                // 否则进行精确匹配
+                return t.equals(requestURI);
+            }
+        });
+
+        if (isWhitelisted) {
             chain.doFilter(request, response);
             return;
         }

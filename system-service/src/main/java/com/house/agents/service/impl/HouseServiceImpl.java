@@ -40,7 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -429,7 +429,6 @@ public class HouseServiceImpl extends ServiceImpl<HouseMapper, House> implements
         housePage.setSize(pageSize);
         housePage.setCurrent(pageNum);
         housePage.setOptimizeCountSql(true);
-        housePage.setHitCount(false);
         housePage.setSearchCount(true);
         housePage.setPages(pages);
         housePage.setRecords(deletedHousesWithPage);
