@@ -57,12 +57,13 @@ aliyun:
     bucketName: house-agents
     #accessKeyId: 不安全,不使用这种方式
     #accessKeySecret: 不安全,不使用这种方式
-# 线程池的参数
-threadPool:
-  corePoolSize: 500
-  maximumPoolSize: 5000
-  keepAliveTime: 60
-  workQueueSize: 10000
+# 线程池的参数 (已废弃 - 现在使用JDK 21虚拟线程，不再需要配置传统线程池参数)
+# 虚拟线程会按需创建，提供更好的性能和可扩展性
+# threadPool:
+#   corePoolSize: 500
+#   maximumPoolSize: 5000
+#   keepAliveTime: 60
+#   workQueueSize: 10000
 wx:
   open:
     # wx sdk中获取二维码登录页面的url地址
