@@ -4,10 +4,6 @@ spring:
   main:
     banner-mode: off
 
-jasypt:
-  encryptor:
-    password: test
-
 logging:
   level:
     org.springframework.boot.autoconfigure: INFO
