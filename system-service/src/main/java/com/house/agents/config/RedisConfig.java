@@ -2,10 +2,12 @@ package com.house.agents.config;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
@@ -25,6 +27,15 @@ public class RedisConfig implements InitializingBean {
     @Autowired
     RedisTemplate redisTemplate;
 
+    @Value("${spring.redis.host}")
+    private String redisHost;
+
+    @Value("${spring.redis.port}")
+    private int redisPort;
+
+    @Value("${spring.redis.password:}")
+    private String redisPassword;
+
     //afterPropertiesSet:当前对象初始化属性值以后调用
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -33,6 +44,18 @@ public class RedisConfig implements InitializingBean {
         //value使用json序列化
         this.redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
     }
+
+    @Bean
+    public LettuceConnectionFactory redisConnectionFactory() {
+        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
+        config.setHostName(redisHost);
+        config.setPort(redisPort);
+        if (redisPassword != null && !redisPassword.isEmpty()) {
+            config.setPassword(redisPassword);
+        }
+        return new LettuceConnectionFactory(config);
+    }
+
     //创建缓存管理器
     @Bean
     public RedisCacheManager redisCacheManager(LettuceConnectionFactory connectionFactory){

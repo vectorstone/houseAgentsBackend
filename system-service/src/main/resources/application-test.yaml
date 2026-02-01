@@ -28,7 +28,7 @@ spring:
   redis:
     host: 192.168.6.141
     #    host: ${REMOTE_HOST}
-    port: 6389
+    port: 6379
     password: ${REDIS_PASSWORD:root}
 mybatis-plus:
   type-aliases-package: com.house.agents.entity
