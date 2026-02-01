@@ -1,7 +1,5 @@
 package com.house.agents.config;
 
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,10 +20,7 @@ import java.time.Duration;
  * @Date: 7/4/2023 10:43 PM
  */
 @Configuration
-//InitializingBean: springbean添加生命周期方法
-public class RedisConfig implements InitializingBean {
-    @Autowired
-    RedisTemplate redisTemplate;
+public class RedisConfig {
 
     @Value("${spring.redis.host}")
     private String redisHost;
@@ -36,15 +31,6 @@ public class RedisConfig implements InitializingBean {
     @Value("${spring.redis.password:}")
     private String redisPassword;
 
-    //afterPropertiesSet:当前对象初始化属性值以后调用
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        //key使用字符串来序列化
-        this.redisTemplate.setKeySerializer(new StringRedisSerializer());
-        //value使用json序列化
-        this.redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-    }
-
     @Bean
     public LettuceConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
@@ -54,6 +40,20 @@ public class RedisConfig implements InitializingBean {
             config.setPassword(redisPassword);
         }
         return new LettuceConnectionFactory(config);
+    }
+
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(LettuceConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        //key使用字符串来序列化
+        template.setKeySerializer(new StringRedisSerializer());
+        //value使用json序列化
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.afterPropertiesSet();
+        return template;
     }
 
     //创建缓存管理器
