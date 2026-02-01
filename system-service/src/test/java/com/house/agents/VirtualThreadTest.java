@@ -1,5 +1,6 @@
 package com.house.agents;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Virtual threads allow for high concurrency with minimal resource overhead.
  */
 @SpringBootTest
+@Slf4j
 public class VirtualThreadTest {
 
     @Autowired
@@ -49,8 +51,8 @@ public class VirtualThreadTest {
         long endTime = System.currentTimeMillis();
         long duration = endTime - startTime;
         
-        System.out.println("Completed " + taskCount + " virtual thread tasks in " + duration + "ms");
-        System.out.println("Virtual threads provide excellent scalability and performance!");
+        log.info("Completed {} virtual thread tasks in {}ms", taskCount, duration);
+        log.info("Virtual threads provide excellent scalability and performance!");
         
         // With virtual threads, 1000 tasks should complete reasonably fast
         // Traditional thread pools would struggle with this many concurrent tasks

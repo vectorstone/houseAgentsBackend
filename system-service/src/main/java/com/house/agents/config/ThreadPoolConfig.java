@@ -19,7 +19,7 @@ public class ThreadPoolConfig {
      * Virtual threads are much more lightweight than platform threads and can handle
      * high concurrency scenarios more efficiently.
      * 
-     * This replaces the traditional ThreadPoolExecutor to leverage JDK 21's coroutine capabilities.
+     * This replaces the traditional ThreadPoolExecutor to leverage JDK 21's virtual thread capabilities.
      * 
      * @return ExecutorService backed by virtual threads
      */
