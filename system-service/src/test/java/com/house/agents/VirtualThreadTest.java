@@ -7,8 +7,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -26,6 +28,7 @@ public class VirtualThreadTest {
     public void testVirtualThreadsPerformance() {
         // Create a large number of concurrent tasks to demonstrate virtual thread efficiency
         int taskCount = 1000;
+        AtomicInteger virtualThreadCount = new AtomicInteger(0);
         
         long startTime = System.currentTimeMillis();
         
@@ -33,8 +36,9 @@ public class VirtualThreadTest {
                 .mapToObj(i -> CompletableFuture.runAsync(() -> {
                     // Check if we're running on a virtual thread
                     Thread currentThread = Thread.currentThread();
-                    assertTrue(currentThread.isVirtual(), 
-                            "Thread should be virtual but got: " + currentThread);
+                    if (currentThread.isVirtual()) {
+                        virtualThreadCount.incrementAndGet();
+                    }
                     
                     // Simulate some work
                     try {
@@ -50,6 +54,10 @@ public class VirtualThreadTest {
         
         long endTime = System.currentTimeMillis();
         long duration = endTime - startTime;
+        
+        // Verify all tasks ran on virtual threads
+        assertEquals(taskCount, virtualThreadCount.get(), 
+                "All tasks should have run on virtual threads");
         
         log.info("Completed {} virtual thread tasks in {}ms", taskCount, duration);
         log.info("Virtual threads provide excellent scalability and performance!");

@@ -21,6 +21,9 @@ public class ThreadPoolConfig {
      * 
      * This replaces the traditional ThreadPoolExecutor to leverage JDK 21's virtual thread capabilities.
      * 
+     * Note: Virtual thread executors do not need explicit shutdown. They are automatically managed
+     * by the JVM and do not hold resources that need to be released like traditional thread pools.
+     * 
      * @return ExecutorService backed by virtual threads
      */
     @Bean
