@@ -39,11 +39,17 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     private final static List<String> WHITE_LIST = Lists.newArrayList(
             "/admin/house/subway","/admin/user/login",
+            "/prod-api/admin/house/subway","/prod-api/admin/user/login",
             "/admin/house/shareHouse","/admin/user/wxLogin",
+            "/prod-api/admin/house/shareHouse","/prod-api/admin/user/wxLogin",
             "/admin/house/unLogin/houseInfo","/admin/house/banner",
+            "/prod-api/admin/house/unLogin/houseInfo","/prod-api/admin/house/banner",
             "/admin/house/getHouseInfo","/wx",
+            "/prod-api/admin/house/getHouseInfo",
+            "/","/login","/index.html","/static/",
             "/monitor/","/actuator/",
-            "/swagger-ui/","/v3/api-docs/","/doc.html","/v3/api-docs"
+            "/swagger-ui/","/v3/api-docs/","/doc.html","/v3/api-docs",
+            "/api/wechat-house-drafts/ingest"
     );
 
     public TokenAuthenticationFilter(RedisTemplate redisTemplate) {
@@ -66,6 +72,9 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         // /unLogin/houseInfo
         // 检查白名单：精确匹配或前缀匹配
         boolean isWhitelisted = WHITE_LIST.stream().anyMatch(t -> {
+            if ("/".equals(t)) {
+                return t.equals(requestURI);
+            }
             if (t.endsWith("/")) {
                 // 如果白名单项以/结尾，进行前缀匹配
                 return requestURI.startsWith(t);
